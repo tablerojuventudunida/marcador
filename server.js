@@ -3,6 +3,7 @@ const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 
+// Servir archivos estáticos desde la carpeta 'public'
 app.use(express.static('public'));
 
 let gameState = {
@@ -32,6 +33,7 @@ function startServerTimer() {
 }
 
 io.on('connection', (socket) => {
+  // Enviar estado actual al cliente que se acaba de conectar
   socket.emit('updateState', gameState);
 
   socket.on('updateState', (newState) => {
@@ -46,12 +48,15 @@ io.on('connection', (socket) => {
       }
     }
 
-    // Actualizar propiedades
-    gameState = { ...gameState, ...newState };
+    // Actualizar propiedades manteniendo la referencia del objeto
+    Object.assign(gameState, newState);
+    
+    // Transmitir el estado actualizado a todos los clientes conectados
     io.emit('updateState', gameState);
   });
 });
 
+// Asignación dinámica de puerto para Railway o puerto local 3000
 const PORT = process.env.PORT || 3000;
 http.listen(PORT, () => {
   console.log(`Servidor activo en el puerto ${PORT}`);
