@@ -1,59 +1,176 @@
-const express = require('express');
-const path = require('path');
-const app = express();
-const http = require('http').createServer(app);
-const io = require('socket.io')(http);
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Control - Marcador</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: #121826; color: #fff; padding: 20px; display: flex; justify-content: center; }
+    .container { max-width: 500px; width: 100%; display: flex; flex-direction: column; gap: 20px; }
+    h1 { text-align: center; font-size: 1.5rem; color: #3b82f6; }
+    .card { background: #1e293b; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    label { font-size: 0.85rem; color: #94a3b8; font-weight: bold; }
+    input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 1rem; }
+    input:focus { outline: none; border-color: #3b82f6; }
+    .score-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .team-box { display: flex; flex-direction: column; align-items: center; gap: 8px; background: #0f172a; padding: 12px; border-radius: 8px; }
+    .score-display { font-size: 2.5rem; font-weight: bold; }
+    .btn-group { display: flex; gap: 8px; width: 100%; }
+    button { flex: 1; padding: 10px; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: opacity 0.2s; }
+    button:active { opacity: 0.8; }
+    .btn-add { background: #22c55e; color: #fff; }
+    .btn-sub { background: #ef4444; color: #fff; }
+    .btn-primary { background: #3b82f6; color: #fff; }
+    .btn-warning { background: #f59e0b; color: #fff; }
+    .timer-display { font-size: 2rem; font-family: monospace; text-align: center; }
+  </style>
+</head>
+<body>
 
-// Sirve archivos tanto de la carpeta raíz como de 'public' si existe
-app.use(express.static(__dirname));
-app.use(express.static(path.join(__dirname, 'public')));
+<div class="container">
+  <h1>Control de Marcador</h1>
 
-let gameState = {
-  homeName: 'LOCAL',
-  awayName: 'VISITANTE',
-  category: 'CATEGORIA 2014',
-  homeScore: 0,
-  awayScore: 0,
-  seconds: 0,
-  period: '1T',
-  homeLogo: '',
-  awayLogo: '',
-  bgUrl: '',
-  timerRunning: false
-};
+  <!-- CONFIGURACIÓN DE EQUIPOS Y CATEGORÍA -->
+  <div class="card">
+    <label>Categoría</label>
+    <input type="text" id="categoryInput" placeholder="Ej: CATEGORIA 2014">
 
-let timerInterval = null;
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <div>
+        <label>Local</label>
+        <input type="text" id="homeNameInput" placeholder="Nombre Local">
+      </div>
+      <div>
+        <label>Visitante</label>
+        <input type="text" id="awayNameInput" placeholder="Nombre Visitante">
+      </div>
+    </div>
 
-function startServerTimer() {
-  if (timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    if (gameState.timerRunning) {
-      gameState.seconds++;
-      io.emit('updateState', gameState);
-    }
-  }, 1000);
-}
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <div>
+        <label>Logo Local (URL)</label>
+        <input type="text" id="homeLogoInput" placeholder="URL Imagen">
+      </div>
+      <div>
+        <label>Logo Visitante (URL)</label>
+        <input type="text" id="awayLogoInput" placeholder="URL Imagen">
+      </div>
+    </div>
 
-io.on('connection', (socket) => {
-  socket.emit('updateState', gameState);
+    <label>Periodo</label>
+    <input type="text" id="periodInput" placeholder="Ej: 1T, 2T, ST">
+  </div>
 
-  socket.on('updateState', (newState) => {
-    if (newState.timerRunning !== undefined) {
-      gameState.timerRunning = newState.timerRunning;
-      if (gameState.timerRunning) {
-        startServerTimer();
-      } else {
-        clearInterval(timerInterval);
-        timerInterval = null;
+  <!-- GOLES -->
+  <div class="score-controls">
+    <div class="team-box">
+      <span id="homeNameLabel" style="font-weight: bold;">LOCAL</span>
+      <span class="score-display" id="homeScoreDisplay">0</span>
+      <div class="btn-group">
+        <button class="btn-sub" onclick="changeScore('homeScore', -1)">-1</button>
+        <button class="btn-add" onclick="changeScore('homeScore', 1)">+1</button>
+      </div>
+    </div>
+
+    <div class="team-box">
+      <span id="awayNameLabel" style="font-weight: bold;">VISITANTE</span>
+      <span class="score-display" id="awayScoreDisplay">0</span>
+      <div class="btn-group">
+        <button class="btn-sub" onclick="changeScore('awayScore', -1)">-1</button>
+        <button class="btn-add" onclick="changeScore('awayScore', 1)">+1</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIEMPO -->
+  <div class="card">
+    <label style="text-align: center;">Cronómetro</label>
+    <div class="timer-display" id="timerDisplay">00:00</div>
+    <div class="btn-group">
+      <button class="btn-primary" id="timerBtn" onclick="toggleTimer()">Iniciar</button>
+      <button class="btn-warning" onclick="resetTimer()">Reiniciar Tiempo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const socket = io();
+  let currentState = {};
+
+  // Función para formatear segundos a MM:SS
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60).toString().padStart(2, '0');
+    const s = (sec % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }
+
+  // Lista de inputs de texto
+  const inputs = {
+    category: document.getElementById('categoryInput'),
+    homeName: document.getElementById('homeNameInput'),
+    awayName: document.getElementById('awayNameInput'),
+    homeLogo: document.getElementById('homeLogoInput'),
+    awayLogo: document.getElementById('awayLogoInput'),
+    period: document.getElementById('periodInput')
+  };
+
+  // Escuchar la actualización desde el servidor
+  socket.on('updateState', (state) => {
+    currentState = state;
+
+    // Actualizar texto solo si el usuario NO está enfocado escribiendo en ese input
+    Object.keys(inputs).forEach(key => {
+      if (inputs[key] && document.activeElement !== inputs[key]) {
+        inputs[key].value = state[key] !== undefined ? state[key] : '';
       }
+    });
+
+    // Actualizar etiquetas y marcadores visuales
+    document.getElementById('homeNameLabel').textContent = state.homeName || 'LOCAL';
+    document.getElementById('awayNameLabel').textContent = state.awayName || 'VISITANTE';
+    document.getElementById('homeScoreDisplay').textContent = state.homeScore;
+    document.getElementById('awayScoreDisplay').textContent = state.awayScore;
+    document.getElementById('timerDisplay').textContent = formatTime(state.seconds || 0);
+
+    const timerBtn = document.getElementById('timerBtn');
+    if (state.timerRunning) {
+      timerBtn.textContent = 'Pausar';
+      timerBtn.style.backgroundColor = '#ef4444';
+    } else {
+      timerBtn.textContent = 'Iniciar';
+      timerBtn.style.backgroundColor = '#3b82f6';
     }
-
-    Object.assign(gameState, newState);
-    io.emit('updateState', gameState);
   });
-});
 
-const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => {
-  console.log(`Servidor activo en el puerto ${PORT}`);
-});
+  // Emitir cambios cuando el usuario modifica un input (evento 'input')
+  Object.keys(inputs).forEach(key => {
+    inputs[key].addEventListener('input', (e) => {
+      const updateData = {};
+      updateData[key] = e.target.value;
+      socket.emit('updateState', updateData);
+    });
+  });
+
+  // Modificar goles
+  function changeScore(team, delta) {
+    const newScore = Math.max(0, (currentState[team] || 0) + delta);
+    const updateData = {};
+    updateData[team] = newScore;
+    socket.emit('updateState', updateData);
+  }
+
+  // Iniciar/Pausar tiempo
+  function toggleTimer() {
+    socket.emit('updateState', { timerRunning: !currentState.timerRunning });
+  }
+
+  // Reiniciar tiempo
+  function resetTimer() {
+    socket.emit('updateState', { seconds: 0, timerRunning: false });
+  }
+</script>
+
+</body>
+</html>
