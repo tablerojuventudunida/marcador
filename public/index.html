@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Control</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #fff; padding: 20px; max-width: 800px; margin: 0 auto; }
+    .card { background: #1e293b; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    input { padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .btn { padding: 10px 16px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; background: #38bdf8; color: #0f172a; }
+    .btn-action { background: #facc15; color: #000; width: 100%; margin-top: 8px; }
+    .btn-danger { background: #ef4444; color: #fff; }
+    .btn-success { background: #22c55e; color: #fff; }
+  </style>
+</head>
+<body>
+
+  <h1 style="text-align: center; color: #facc15; margin-bottom: 20px;">Panel de Control</h1>
+
+  <div class="card">
+    <div class="field">
+      <label>Categoría</label>
+      <input type="text" id="categoryInput">
+    </div>
+    <button class="btn btn-action" onclick="sendState()">Aplicar Categoría</button>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div>
+        <h3>Local</h3>
+        <div class="field"><label>Nombre</label><input type="text" id="homeNameInput"></div>
+        <div class="field"><label>URL Escudo</label><input type="text" id="homeLogoInput"></div>
+        <div>
+          <button class="btn" onclick="changeScore('home', -1)">-1</button>
+          <span id="homeScoreText" style="font-size: 1.5rem; margin: 0 10px;">0</span>
+          <button class="btn" onclick="changeScore('home', 1)">+1</button>
+        </div>
+      </div>
+      <div>
+        <h3>Visitante</h3>
+        <div class="field"><label>Nombre</label><input type="text" id="awayNameInput"></div>
+        <div class="field"><label>URL Escudo</label><input type="text" id="awayLogoInput"></div>
+        <div>
+          <button class="btn" onclick="changeScore('away', -1)">-1</button>
+          <span id="awayScoreText" style="font-size: 1.5rem; margin: 0 10px;">0</span>
+          <button class="btn" onclick="changeScore('away', 1)">+1</button>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-action" onclick="sendState()">Aplicar Datos de Equipos</button>
+  </div>
+
+  <div class="card">
+    <h3>Cronómetro</h3>
+    <div style="display: flex; gap: 10px; margin: 15px 0;">
+      <div class="field" style="flex:1;"><label>Periodo</label><input type="text" id="periodInput"></div>
+      <div class="field" style="flex:1;"><label>Minutos</label><input type="number" id="minutesInput"></div>
+      <div class="field" style="flex:1;"><label>Segundos</label><input type="number" id="secondsInput"></div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button class="btn btn-action" style="flex:1;" onclick="applyTime()">Setear Tiempo</button>
+      <button class="btn btn-success" id="btnToggle" style="flex:1;" onclick="toggleTimer()">Iniciar</button>
+      <button class="btn btn-danger" onclick="resetTimer()">Reiniciar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="field">
+      <label>URL Fondo</label>
+      <input type="text" id="bgUrlInput">
+    </div>
+    <button class="btn btn-action" onclick="sendState()">Aplicar Fondo</button>
+  </div>
+
+  <script>
+    const socket = io();
+    let currentState = {};
+
+    socket.on('updateState', (state) => {
+      currentState = state;
+      
+      document.getElementById('categoryInput').value = state.category || '';
+      document.getElementById('homeNameInput').value = state.homeName || '';
+      document.getElementById('awayNameInput').value = state.awayName || '';
+      document.getElementById('homeLogoInput').value = state.homeLogo || '';
+      document.getElementById('awayLogoInput').value = state.awayLogo || '';
+      document.getElementById('periodInput').value = state.period || '';
+      document.getElementById('bgUrlInput').value = state.bgUrl || '';
+      document.getElementById('homeScoreText').innerText = state.homeScore;
+      document.getElementById('awayScoreText').innerText = state.awayScore;
+
+      const btnToggle = document.getElementById('btnToggle');
+      btnToggle.innerText = state.timerRunning ? 'Pausar' : 'Iniciar';
+      btnToggle.className = state.timerRunning ? 'btn btn-action' : 'btn btn-success';
+
+      if (document.activeElement.tagName !== 'INPUT') {
+        document.getElementById('minutesInput').value = Math.floor(state.seconds / 60);
+        document.getElementById('secondsInput').value = state.seconds % 60;
+      }
+    });
+
+    function sendState() {
+      currentState.category = document.getElementById('categoryInput').value;
+      currentState.homeName = document.getElementById('homeNameInput').value;
+      currentState.awayName = document.getElementById('awayNameInput').value;
+      currentState.homeLogo = document.getElementById('homeLogoInput').value;
+      currentState.awayLogo = document.getElementById('awayLogoInput').value;
+      currentState.period = document.getElementById('periodInput').value;
+      currentState.bgUrl = document.getElementById('bgUrlInput').value;
+      socket.emit('updateState', currentState);
+    }
+
+    function changeScore(team, delta) {
+      if (team === 'home') currentState.homeScore = Math.max(0, currentState.homeScore + delta);
+      else currentState.awayScore = Math.max(0, currentState.awayScore + delta);
+      sendState();
+    }
+
+    function toggleTimer() {
+      socket.emit('updateState', { timerRunning: !currentState.timerRunning });
+    }
+
+    function applyTime() {
+      const m = parseInt(document.getElementById('minutesInput').value) || 0;
+      const s = parseInt(document.getElementById('secondsInput').value) || 0;
+      socket.emit('updateState', { seconds: (m * 60) + s });
+    }
+
+    function resetTimer() {
+      socket.emit('updateState', { seconds: 0, timerRunning: false });
+    }
+  </script>
+</body>
+</html>
