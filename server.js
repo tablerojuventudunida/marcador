@@ -8,6 +8,11 @@ const io = require('socket.io')(http);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname));
 
+// Ruta principal por defecto
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 let gameState = {
   homeName: 'LOCAL',
   awayName: 'VISITANTE',
@@ -35,8 +40,10 @@ function startServerTimer() {
 }
 
 io.on('connection', (socket) => {
+  // Enviar estado actual al conectar
   socket.emit('updateState', gameState);
 
+  // Actualización de estado general
   socket.on('updateState', (newState) => {
     if (newState.timerRunning !== undefined) {
       gameState.timerRunning = newState.timerRunning;
@@ -52,7 +59,7 @@ io.on('connection', (socket) => {
     io.emit('updateState', gameState);
   });
 
-  // Evento directo para disparar la animación de gol
+  // Reenviar evento directo de gol a la TV
   socket.on('triggerGoal', (data) => {
     io.emit('triggerGoal', data);
   });
