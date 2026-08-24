@@ -4,8 +4,9 @@ const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 
-app.use(express.static(__dirname));
+// Servir archivos estáticos tanto desde la carpeta 'public' como desde la raíz
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 let gameState = {
   homeName: 'LOCAL',
@@ -51,7 +52,7 @@ io.on('connection', (socket) => {
     io.emit('updateState', gameState);
   });
 
-  // Reenviar evento directo de gol a todos los clientes (TV)
+  // Evento directo para disparar la animación de gol
   socket.on('triggerGoal', (data) => {
     io.emit('triggerGoal', data);
   });
