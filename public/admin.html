@@ -24,6 +24,7 @@
     .btn-sub { background: #ef4444; color: #fff; }
     .btn-primary { background: #3b82f6; color: #fff; }
     .btn-warning { background: #f59e0b; color: #fff; }
+    .btn-goal { background: #eab308; color: #000; width: 100%; padding: 8px; margin-top: 5px; font-size: 0.9rem; }
     .timer-display { font-size: 2rem; font-family: monospace; text-align: center; }
   </style>
 </head>
@@ -32,7 +33,6 @@
 <div class="container">
   <h1>Control de Marcador</h1>
 
-  <!-- CONFIGURACIÓN DE EQUIPOS Y CATEGORÍA -->
   <div class="card">
     <label>Categoría</label>
     <input type="text" id="categoryInput" placeholder="Ej: CATEGORIA 2014">
@@ -63,7 +63,6 @@
     <input type="text" id="periodInput" placeholder="Ej: 1T, 2T, ST">
   </div>
 
-  <!-- GOLES -->
   <div class="score-controls">
     <div class="team-box">
       <span id="homeNameLabel" style="font-weight: bold;">LOCAL</span>
@@ -72,6 +71,7 @@
         <button class="btn-sub" onclick="changeScore('homeScore', -1)">-1</button>
         <button class="btn-add" onclick="changeScore('homeScore', 1)">+1</button>
       </div>
+      <button class="btn-goal" onclick="triggerGoal('home')">⚽ ¡GOL LOCAL!</button>
     </div>
 
     <div class="team-box">
@@ -81,10 +81,10 @@
         <button class="btn-sub" onclick="changeScore('awayScore', -1)">-1</button>
         <button class="btn-add" onclick="changeScore('awayScore', 1)">+1</button>
       </div>
+      <button class="btn-goal" onclick="triggerGoal('away')">⚽ ¡GOL VISITANTE!</button>
     </div>
   </div>
 
-  <!-- TIEMPO -->
   <div class="card">
     <label style="text-align: center;">Cronómetro</label>
     <div class="timer-display" id="timerDisplay">00:00</div>
@@ -99,14 +99,12 @@
   const socket = io();
   let currentState = {};
 
-  // Función para formatear segundos a MM:SS
   function formatTime(sec) {
     const m = Math.floor(sec / 60).toString().padStart(2, '0');
     const s = (sec % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   }
 
-  // Lista de inputs de texto
   const inputs = {
     category: document.getElementById('categoryInput'),
     homeName: document.getElementById('homeNameInput'),
@@ -116,18 +114,15 @@
     period: document.getElementById('periodInput')
   };
 
-  // Escuchar la actualización desde el servidor
   socket.on('updateState', (state) => {
     currentState = state;
 
-    // Actualizar texto solo si el usuario NO está enfocado escribiendo en ese input
     Object.keys(inputs).forEach(key => {
       if (inputs[key] && document.activeElement !== inputs[key]) {
         inputs[key].value = state[key] !== undefined ? state[key] : '';
       }
     });
 
-    // Actualizar etiquetas y marcadores visuales
     document.getElementById('homeNameLabel').textContent = state.homeName || 'LOCAL';
     document.getElementById('awayNameLabel').textContent = state.awayName || 'VISITANTE';
     document.getElementById('homeScoreDisplay').textContent = state.homeScore;
@@ -144,7 +139,6 @@
     }
   });
 
-  // Emitir cambios cuando el usuario modifica un input (evento 'input')
   Object.keys(inputs).forEach(key => {
     inputs[key].addEventListener('input', (e) => {
       const updateData = {};
@@ -153,20 +147,26 @@
     });
   });
 
-  // Modificar goles
   function changeScore(team, delta) {
-    const newScore = Math.max(0, (currentState[team] || 0) + delta);
+    const currentVal = Number(currentState[team] || 0);
+    const newScore = Math.max(0, currentVal + delta);
     const updateData = {};
     updateData[team] = newScore;
     socket.emit('updateState', updateData);
   }
 
-  // Iniciar/Pausar tiempo
+  // Disparar animación explícitamente
+  function triggerGoal(teamKey) {
+    const teamName = teamKey === 'home' ? (currentState.homeName || 'LOCAL') : (currentState.awayName || 'VISITANTE');
+    // Suma el gol y dispara el evento
+    changeScore(teamKey === 'home' ? 'homeScore' : 'awayScore', 1);
+    socket.emit('triggerGoal', { teamName });
+  }
+
   function toggleTimer() {
     socket.emit('updateState', { timerRunning: !currentState.timerRunning });
   }
 
-  // Reiniciar tiempo
   function resetTimer() {
     socket.emit('updateState', { seconds: 0, timerRunning: false });
   }
