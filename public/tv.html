@@ -2,171 +2,181 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Marcador TV</title>
   <script src="/socket.io/socket.io.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial Black', sans-serif; }
-    body { background-color: #000; color: #fff; overflow: hidden; height: 100vh; display: flex; justify-content: center; align-items: center; position: relative; }
+    body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      font-family: 'Arial Black', sans-serif;
+      overflow: hidden;
+    }
 
-    /* CONTENEDOR PRINCIPAL DEL TABLERO */
-    .scoreboard { display: flex; flex-direction: column; width: 90vw; max-width: 1200px; background: #1e293b; border-radius: 20px; border: 4px solid #334155; overflow: hidden; }
-    .header { background: #0f172a; text-align: center; padding: 15px; font-size: 2rem; color: #3b82f6; text-transform: uppercase; letter-spacing: 2px; }
-    .main-body { display: flex; justify-content: space-between; align-items: center; padding: 30px; }
-    .team { display: flex; flex-direction: column; align-items: center; gap: 15px; flex: 1; }
-    .team img { width: 120px; height: 120px; object-fit: contain; }
-    .team-name { font-size: 2.5rem; text-align: center; text-transform: uppercase; }
-    .score { font-size: 6rem; background: #0f172a; padding: 10px 30px; border-radius: 15px; min-width: 140px; text-align: center; border: 2px solid #334155; }
-    .center-info { display: flex; flex-direction: column; align-items: center; gap: 15px; margin: 0 20px; }
-    .timer { font-size: 4rem; font-family: monospace; background: #000; padding: 10px 20px; border-radius: 10px; color: #22c55e; border: 2px solid #22c55e; }
-    .period { font-size: 2rem; color: #f59e0b; text-transform: uppercase; }
+    /* BARRA SUPERIOR DEL MARCADOR */
+    #scoreboard {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.85);
+      color: white;
+      border-radius: 8px;
+      padding: 10px 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
 
-    /* CARTEL DE GOL A PANTALLA COMPLETA (FIXED) */
-    #goalOverlay {
+    .team-logo {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+      margin: 0 8px;
+    }
+
+    .team-name {
+      font-size: 20px;
+      font-weight: bold;
+      text-transform: uppercase;
+      padding: 0 10px;
+    }
+
+    .score {
+      font-size: 26px;
+      background: #ffcc00;
+      color: black;
+      padding: 2px 12px;
+      border-radius: 5px;
+      margin: 0 5px;
+    }
+
+    .timer-box {
+      margin-left: 15px;
+      border-left: 2px solid #555;
+      padding-left: 15px;
+      text-align: center;
+    }
+
+    .timer {
+      font-size: 22px;
+      color: #00ffcc;
+    }
+
+    .period {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    /* OVERLAY / CARTEL ANIMADO DE GOL */
+    #goal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0, 0, 0, 0.9);
+      background: rgba(0, 0, 0, 0.7);
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      z-index: 99999;
       opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s ease, visibility 0.3s ease;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      z-index: 9999;
     }
 
-    #goalOverlay.active {
+    #goal-overlay.active {
       opacity: 1;
-      visibility: visible;
     }
 
     .goal-title {
-      font-size: 8rem;
-      color: #facc15;
-      text-shadow: 0 0 20px #facc15, 0 0 50px #eab308;
-      animation: zoomPulse 0.5s ease-in-out infinite alternate;
-    }
-
-    .goal-team-name {
-      font-size: 3.5rem;
-      color: #ffffff;
+      font-size: 110px;
+      color: #ffcc00;
+      text-shadow: 0 0 20px #ff0000, 0 0 40px #ffcc00;
+      animation: pulse 0.6s infinite alternate;
+      margin: 0;
       text-transform: uppercase;
-      margin-top: 10px;
-      letter-spacing: 3px;
     }
 
-    @keyframes zoomPulse {
-      from { transform: scale(0.95); }
-      to { transform: scale(1.08); }
+    .goal-team {
+      font-size: 50px;
+      color: white;
+      margin-top: 10px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+      text-transform: uppercase;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); }
+      100% { transform: scale(1.1); }
     }
   </style>
 </head>
 <body>
 
-  <!-- CARTEL SUPERPUESTO DE GOL -->
-  <div id="goalOverlay">
-    <div class="goal-title">¡GOOOOOL!</div>
-    <div class="goal-team-name" id="goalTeamName">LOCAL</div>
-  </div>
+  <div id="scoreboard">
+    <span class="team-name" id="homeName">LOCAL</span>
+    <img id="homeLogo" class="team-logo" style="display:none;">
+    <span class="score" id="homeScore">0</span>
+    <span>-</span>
+    <span class="score" id="awayScore">0</span>
+    <img id="awayLogo" class="team-logo" style="display:none;">
+    <span class="team-name" id="awayName">VISITANTE</span>
 
-  <div class="scoreboard">
-    <div class="header" id="categoryDisplay">CATEGORIA 2014</div>
-    <div class="main-body">
-      <div class="team">
-        <img id="homeLogo" src="" style="display:none;">
-        <div class="team-name" id="homeName">LOCAL</div>
-        <div class="score" id="homeScore">0</div>
-      </div>
-
-      <div class="center-info">
-        <div class="period" id="periodDisplay">1T</div>
-        <div class="timer" id="timerDisplay">00:00</div>
-      </div>
-
-      <div class="team">
-        <img id="awayLogo" src="" style="display:none;">
-        <div class="team-name" id="awayName">VISITANTE</div>
-        <div class="score" id="awayScore">0</div>
-      </div>
+    <div class="timer-box">
+      <div class="timer" id="timer">00:00</div>
+      <div class="period" id="period">1T</div>
     </div>
   </div>
 
-<script>
-  const socket = io();
+  <!-- CARTEL DE GOL -->
+  <div id="goal-overlay">
+    <h1 class="goal-title">¡¡GOOOOOL!!</h1>
+    <div class="goal-team" id="goalTeamName">EQUIPO</div>
+  </div>
 
-  let lastHomeScore = null;
-  let lastAwayScore = null;
-  let goalTimer = null;
+  <script>
+    const socket = io();
 
-  function formatTime(sec) {
-    const m = Math.floor(sec / 60).toString().padStart(2, '0');
-    const s = (sec % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
-  }
+    socket.on('updateState', (state) => {
+      document.getElementById('homeName').innerText = state.homeName || 'LOCAL';
+      document.getElementById('awayName').innerText = state.awayName || 'VISITANTE';
+      document.getElementById('homeScore').innerText = state.homeScore;
+      document.getElementById('awayScore').innerText = state.awayScore;
+      document.getElementById('period').innerText = state.period || '1T';
 
-  function showGoalBanner(teamName) {
-    const overlay = document.getElementById('goalOverlay');
-    const teamLabel = document.getElementById('goalTeamName');
+      let mins = Math.floor(state.seconds / 60).toString().padStart(2, '0');
+      let secs = (state.seconds % 60).toString().padStart(2, '0');
+      document.getElementById('timer').innerText = `${mins}:${secs}`;
 
-    teamLabel.textContent = teamName;
-    overlay.classList.add('active');
+      if (state.homeLogo) {
+        document.getElementById('homeLogo').src = state.homeLogo;
+        document.getElementById('homeLogo').style.display = 'inline';
+      } else {
+        document.getElementById('homeLogo').style.display = 'none';
+      }
 
-    if (goalTimer) clearTimeout(goalTimer);
-    goalTimer = setTimeout(() => {
-      overlay.classList.remove('active');
-    }, 4000); // Se muestra durante 4 segundos
-  }
+      if (state.awayLogo) {
+        document.getElementById('awayLogo').src = state.awayLogo;
+        document.getElementById('awayLogo').style.display = 'inline';
+      } else {
+        document.getElementById('awayLogo').style.display = 'none';
+      }
+    });
 
-  // Escuchar evento explícito de gol
-  socket.on('triggerGoal', (data) => {
-    showGoalBanner(data.teamName);
-  });
+    // Escuchar el disparo de Gol
+    socket.on('triggerGoal', (data) => {
+      const overlay = document.getElementById('goal-overlay');
+      const teamLabel = document.getElementById('goalTeamName');
 
-  socket.on('updateState', (state) => {
-    const newHomeScore = Number(state.homeScore || 0);
-    const newAwayScore = Number(state.awayScore || 0);
+      teamLabel.innerText = data.teamName;
+      overlay.classList.add('active');
 
-    // Detección automática por incremento de marcador
-    if (lastHomeScore !== null && newHomeScore > lastHomeScore) {
-      showGoalBanner(state.homeName || 'LOCAL');
-    } else if (lastAwayScore !== null && newAwayScore > lastAwayScore) {
-      showGoalBanner(state.awayName || 'VISITANTE');
-    }
-
-    lastHomeScore = newHomeScore;
-    lastAwayScore = newAwayScore;
-
-    // Actualizar elementos
-    document.getElementById('categoryDisplay').textContent = state.category || 'CATEGORIA';
-    document.getElementById('homeName').textContent = state.homeName || 'LOCAL';
-    document.getElementById('awayName').textContent = state.awayName || 'VISITANTE';
-    document.getElementById('homeScore').textContent = newHomeScore;
-    document.getElementById('awayScore').textContent = newAwayScore;
-    document.getElementById('periodDisplay').textContent = state.period || '1T';
-    document.getElementById('timerDisplay').textContent = formatTime(state.seconds || 0);
-
-    // Logos
-    const homeLogoImg = document.getElementById('homeLogo');
-    if (state.homeLogo) {
-      homeLogoImg.src = state.homeLogo;
-      homeLogoImg.style.display = 'block';
-    } else {
-      homeLogoImg.style.display = 'none';
-    }
-
-    const awayLogoImg = document.getElementById('awayLogo');
-    if (state.awayLogo) {
-      awayLogoImg.src = state.awayLogo;
-      awayLogoImg.style.display = 'block';
-    } else {
-      awayLogoImg.style.display = 'none';
-    }
-  });
-</script>
-
+      // Ocultar la animación automáticamente a los 5 segundos
+      setTimeout(() => {
+        overlay.classList.remove('active');
+      }, 5000);
+    });
+  </script>
 </body>
 </html>
