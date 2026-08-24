@@ -1,10 +1,11 @@
 const express = require('express');
+const path = require('path');
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 
-// Servir archivos estáticos desde la carpeta 'public'
-app.use(express.static('public'));
+app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
 let gameState = {
   homeName: 'LOCAL',
@@ -33,11 +34,9 @@ function startServerTimer() {
 }
 
 io.on('connection', (socket) => {
-  // Enviar estado actual al cliente que se acaba de conectar
   socket.emit('updateState', gameState);
 
   socket.on('updateState', (newState) => {
-    // Si cambia el estado del temporizador
     if (newState.timerRunning !== undefined) {
       gameState.timerRunning = newState.timerRunning;
       if (gameState.timerRunning) {
@@ -48,15 +47,16 @@ io.on('connection', (socket) => {
       }
     }
 
-    // Actualizar propiedades manteniendo la referencia del objeto
     Object.assign(gameState, newState);
-    
-    // Transmitir el estado actualizado a todos los clientes conectados
     io.emit('updateState', gameState);
+  });
+
+  // Reenviar evento directo de gol a todos los clientes (TV)
+  socket.on('triggerGoal', (data) => {
+    io.emit('triggerGoal', data);
   });
 });
 
-// Asignación dinámica de puerto para Railway o puerto local 3000
 const PORT = process.env.PORT || 3000;
 http.listen(PORT, () => {
   console.log(`Servidor activo en el puerto ${PORT}`);
