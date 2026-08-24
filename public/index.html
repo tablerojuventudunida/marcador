@@ -6,171 +6,140 @@
   <title>Panel de Control - Marcador</title>
   <script src="/socket.io/socket.io.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background-color: #121826; color: #fff; padding: 20px; display: flex; justify-content: center; }
-    .container { max-width: 500px; width: 100%; display: flex; flex-direction: column; gap: 20px; }
-    h1 { text-align: center; font-size: 1.5rem; color: #3b82f6; }
-    .card { background: #1e293b; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-    label { font-size: 0.85rem; color: #94a3b8; font-weight: bold; }
-    input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 1rem; }
-    input:focus { outline: none; border-color: #3b82f6; }
-    .score-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .team-box { display: flex; flex-direction: column; align-items: center; gap: 8px; background: #0f172a; padding: 12px; border-radius: 8px; }
-    .score-display { font-size: 2.5rem; font-weight: bold; }
-    .btn-group { display: flex; gap: 8px; width: 100%; }
-    button { flex: 1; padding: 10px; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: opacity 0.2s; }
-    button:active { opacity: 0.8; }
-    .btn-add { background: #22c55e; color: #fff; }
-    .btn-sub { background: #ef4444; color: #fff; }
-    .btn-primary { background: #3b82f6; color: #fff; }
-    .btn-warning { background: #f59e0b; color: #fff; }
-    .btn-goal { background: #eab308; color: #000; width: 100%; padding: 8px; margin-top: 5px; font-size: 0.9rem; }
-    .timer-display { font-size: 2rem; font-family: monospace; text-align: center; }
+    body { font-family: sans-serif; padding: 20px; background: #222; color: #fff; max-width: 600px; margin: auto; }
+    h1 { text-align: center; }
+    .group { background: #333; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input, select { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+    .flex { display: flex; gap: 10px; margin-top: 10px; }
+    button { flex: 1; padding: 12px; font-weight: bold; cursor: pointer; border: none; border-radius: 5px; }
+    .btn-green { background: #28a745; color: white; }
+    .btn-red { background: #dc3545; color: white; }
+    .btn-blue { background: #007bff; color: white; }
+    .btn-yellow { background: #ffc107; color: #000; font-size: 1.1em; text-transform: uppercase; }
   </style>
 </head>
 <body>
 
-<div class="container">
   <h1>Control de Marcador</h1>
 
-  <div class="card">
-    <label>Categoría</label>
-    <input type="text" id="categoryInput" placeholder="Ej: CATEGORIA 2014">
+  <div class="group">
+    <label>Categoría / Torneo:</label>
+    <input type="text" id="category" value="CATEGORIA 2014">
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-      <div>
-        <label>Local</label>
-        <input type="text" id="homeNameInput" placeholder="Nombre Local">
-      </div>
-      <div>
-        <label>Visitante</label>
-        <input type="text" id="awayNameInput" placeholder="Nombre Visitante">
-      </div>
-    </div>
+    <label>Equipo Local:</label>
+    <input type="text" id="homeName" value="LOCAL">
+    <label>Logo Local (URL):</label>
+    <input type="text" id="homeLogo">
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-      <div>
-        <label>Logo Local (URL)</label>
-        <input type="text" id="homeLogoInput" placeholder="URL Imagen">
-      </div>
-      <div>
-        <label>Logo Visitante (URL)</label>
-        <input type="text" id="awayLogoInput" placeholder="URL Imagen">
-      </div>
-    </div>
+    <label>Equipo Visitante:</label>
+    <input type="text" id="awayName" value="VISITANTE">
+    <label>Logo Visitante (URL):</label>
+    <input type="text" id="awayLogo">
 
-    <label>Periodo</label>
-    <input type="text" id="periodInput" placeholder="Ej: 1T, 2T, ST">
+    <label>Fondo TV (URL):</label>
+    <input type="text" id="bgUrl">
+    
+    <label>Periodo:</label>
+    <select id="period">
+      <option value="1T">1T (Primer Tiempo)</option>
+      <option value="2T">2T (Segundo Tiempo)</option>
+      <option value="ET">ET (Entre Tiempo)</option>
+      <option value="ST">ST (Sin Tiempo)</option>
+    </select>
+    
+    <button class="btn-blue" style="width:100%; margin-top:15px;" onclick="saveInfo()">Guardar Nombres / Logos</button>
   </div>
 
-  <div class="score-controls">
-    <div class="team-box">
-      <span id="homeNameLabel" style="font-weight: bold;">LOCAL</span>
-      <span class="score-display" id="homeScoreDisplay">0</span>
-      <div class="btn-group">
-        <button class="btn-sub" onclick="changeScore('homeScore', -1)">-1</button>
-        <button class="btn-add" onclick="changeScore('homeScore', 1)">+1</button>
-      </div>
-      <button class="btn-goal" onclick="triggerGoal('home')">⚽ ¡GOL LOCAL!</button>
-    </div>
-
-    <div class="team-box">
-      <span id="awayNameLabel" style="font-weight: bold;">VISITANTE</span>
-      <span class="score-display" id="awayScoreDisplay">0</span>
-      <div class="btn-group">
-        <button class="btn-sub" onclick="changeScore('awayScore', -1)">-1</button>
-        <button class="btn-add" onclick="changeScore('awayScore', 1)">+1</button>
-      </div>
-      <button class="btn-goal" onclick="triggerGoal('away')">⚽ ¡GOL VISITANTE!</button>
+  <!-- BANDERAS DE GOL DIRECTO CON ANIMACIÓN -->
+  <div class="group">
+    <h3>Animación de Gol</h3>
+    <div class="flex">
+      <button class="btn-yellow" onclick="triggerGoal('home')">⚽ ¡GOL LOCAL!</button>
+      <button class="btn-yellow" onclick="triggerGoal('away')">⚽ ¡GOL VISITANTE!</button>
     </div>
   </div>
 
-  <div class="card">
-    <label style="text-align: center;">Cronómetro</label>
-    <div class="timer-display" id="timerDisplay">00:00</div>
-    <div class="btn-group">
-      <button class="btn-primary" id="timerBtn" onclick="toggleTimer()">Iniciar</button>
-      <button class="btn-warning" onclick="resetTimer()">Reiniciar Tiempo</button>
+  <div class="group">
+    <h3>Marcador Manual</h3>
+    <p>Local: <span id="lblHome">0</span> | Visitante: <span id="lblAway">0</span></p>
+    <div class="flex">
+      <button class="btn-green" onclick="addScore('home', 1)">+1 Local</button>
+      <button class="btn-red" onclick="addScore('home', -1)">-1 Local</button>
+    </div>
+    <div class="flex">
+      <button class="btn-green" onclick="addScore('away', 1)">+1 Visitante</button>
+      <button class="btn-red" onclick="addScore('away', -1)">-1 Visitante</button>
     </div>
   </div>
-</div>
 
-<script>
-  const socket = io();
-  let currentState = {};
+  <div class="group">
+    <h3>Reloj: <span id="lblTimer">00:00</span></h3>
+    <div class="flex">
+      <button class="btn-green" onclick="toggleTimer(true)">Iniciar</button>
+      <button class="btn-red" onclick="toggleTimer(false)">Pausar</button>
+    </div>
+    <div class="flex">
+      <input type="number" id="customMin" placeholder="Minutos" style="width: 50%;">
+      <button class="btn-blue" onclick="setTimer()">Ajustar Minutos</button>
+    </div>
+  </div>
 
-  function formatTime(sec) {
-    const m = Math.floor(sec / 60).toString().padStart(2, '0');
-    const s = (sec % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
-  }
+  <script>
+    const socket = io();
+    let currentState = {};
 
-  const inputs = {
-    category: document.getElementById('categoryInput'),
-    homeName: document.getElementById('homeNameInput'),
-    awayName: document.getElementById('awayNameInput'),
-    homeLogo: document.getElementById('homeLogoInput'),
-    awayLogo: document.getElementById('awayLogoInput'),
-    period: document.getElementById('periodInput')
-  };
-
-  socket.on('updateState', (state) => {
-    currentState = state;
-
-    Object.keys(inputs).forEach(key => {
-      if (inputs[key] && document.activeElement !== inputs[key]) {
-        inputs[key].value = state[key] !== undefined ? state[key] : '';
-      }
+    socket.on('updateState', (state) => {
+      currentState = state;
+      document.getElementById('lblHome').innerText = state.homeScore;
+      document.getElementById('lblAway').innerText = state.awayScore;
+      
+      let mins = Math.floor(state.seconds / 60).toString().padStart(2, '0');
+      let secs = (state.seconds % 60).toString().padStart(2, '0');
+      document.getElementById('lblTimer').innerText = `${mins}:${secs}`;
     });
 
-    document.getElementById('homeNameLabel').textContent = state.homeName || 'LOCAL';
-    document.getElementById('awayNameLabel').textContent = state.awayName || 'VISITANTE';
-    document.getElementById('homeScoreDisplay').textContent = state.homeScore;
-    document.getElementById('awayScoreDisplay').textContent = state.awayScore;
-    document.getElementById('timerDisplay').textContent = formatTime(state.seconds || 0);
-
-    const timerBtn = document.getElementById('timerBtn');
-    if (state.timerRunning) {
-      timerBtn.textContent = 'Pausar';
-      timerBtn.style.backgroundColor = '#ef4444';
-    } else {
-      timerBtn.textContent = 'Iniciar';
-      timerBtn.style.backgroundColor = '#3b82f6';
+    function saveInfo() {
+      socket.emit('updateState', {
+        category: document.getElementById('category').value,
+        homeName: document.getElementById('homeName').value,
+        homeLogo: document.getElementById('homeLogo').value,
+        awayName: document.getElementById('awayName').value,
+        awayLogo: document.getElementById('awayLogo').value,
+        bgUrl: document.getElementById('bgUrl').value,
+        period: document.getElementById('period').value
+      });
     }
-  });
 
-  Object.keys(inputs).forEach(key => {
-    inputs[key].addEventListener('input', (e) => {
-      const updateData = {};
-      updateData[key] = e.target.value;
-      socket.emit('updateState', updateData);
-    });
-  });
+    function addScore(team, val) {
+      if (team === 'home') {
+        let newScore = Math.max(0, currentState.homeScore + val);
+        socket.emit('updateState', { homeScore: newScore });
+      } else {
+        let newScore = Math.max(0, currentState.awayScore + val);
+        socket.emit('updateState', { awayScore: newScore });
+      }
+    }
 
-  function changeScore(team, delta) {
-    const currentVal = Number(currentState[team] || 0);
-    const newScore = Math.max(0, currentVal + delta);
-    const updateData = {};
-    updateData[team] = newScore;
-    socket.emit('updateState', updateData);
-  }
+    function toggleTimer(running) {
+      socket.emit('updateState', { timerRunning: running });
+    }
 
-  // Disparar animación explícitamente
-  function triggerGoal(teamKey) {
-    const teamName = teamKey === 'home' ? (currentState.homeName || 'LOCAL') : (currentState.awayName || 'VISITANTE');
-    // Suma el gol y dispara el evento
-    changeScore(teamKey === 'home' ? 'homeScore' : 'awayScore', 1);
-    socket.emit('triggerGoal', { teamName });
-  }
+    function setTimer() {
+      let min = parseInt(document.getElementById('customMin').value) || 0;
+      socket.emit('updateState', { seconds: min * 60 });
+    }
 
-  function toggleTimer() {
-    socket.emit('updateState', { timerRunning: !currentState.timerRunning });
-  }
-
-  function resetTimer() {
-    socket.emit('updateState', { seconds: 0, timerRunning: false });
-  }
-</script>
-
+    // Disparar la animación de gol y sumar el punto
+    function triggerGoal(team) {
+      if (team === 'home') {
+        socket.emit('updateState', { homeScore: currentState.homeScore + 1 });
+        socket.emit('triggerGoal', { teamName: currentState.homeName || 'LOCAL' });
+      } else {
+        socket.emit('updateState', { awayScore: currentState.awayScore + 1 });
+        socket.emit('triggerGoal', { teamName: currentState.awayName || 'VISITANTE' });
+      }
+    }
+  </script>
 </body>
 </html>
