@@ -7,101 +7,100 @@
   <script src="/socket.io/socket.io.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial Black', sans-serif; }
-    body { background-color: #000; color: #fff; overflow: hidden; height: 100vh; display: flex; justify-content: center; align-items: center; }
+    body { background-color: #000; color: #fff; overflow: hidden; height: 100vh; display: flex; justify-content: center; align-items: center; position: relative; }
 
     /* CONTENEDOR PRINCIPAL DEL TABLERO */
-    .scoreboard { display: flex; flex-direction: column; width: 90vw; max-width: 1200px; background: #1e293b; border-radius: 20px; border: 4px solid #334155; overflow: hidden; position: relative; }
-    
+    .scoreboard { display: flex; flex-direction: column; width: 90vw; max-width: 1200px; background: #1e293b; border-radius: 20px; border: 4px solid #334155; overflow: hidden; }
     .header { background: #0f172a; text-align: center; padding: 15px; font-size: 2rem; color: #3b82f6; text-transform: uppercase; letter-spacing: 2px; }
-    
     .main-body { display: flex; justify-content: space-between; align-items: center; padding: 30px; }
-    
     .team { display: flex; flex-direction: column; align-items: center; gap: 15px; flex: 1; }
     .team img { width: 120px; height: 120px; object-fit: contain; }
     .team-name { font-size: 2.5rem; text-align: center; text-transform: uppercase; }
     .score { font-size: 6rem; background: #0f172a; padding: 10px 30px; border-radius: 15px; min-width: 140px; text-align: center; border: 2px solid #334155; }
-
     .center-info { display: flex; flex-direction: column; align-items: center; gap: 15px; margin: 0 20px; }
     .timer { font-size: 4rem; font-family: monospace; background: #000; padding: 10px 20px; border-radius: 10px; color: #22c55e; border: 2px solid #22c55e; }
     .period { font-size: 2rem; color: #f59e0b; text-transform: uppercase; }
 
-    /* ANIMACIÓN DE GOOOOOL OVERLAY */
-    .goal-overlay {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.88);
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: center;
-      z-index: 100;
+    /* CARTEL DE GOL A PANTALLA COMPLETA (FIXED) */
+    #goalOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
       opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
     }
 
-    .goal-overlay.show {
+    #goalOverlay.active {
       opacity: 1;
-      pointer-events: auto;
+      visibility: visible;
     }
 
-    .goal-text {
-      font-size: 7rem;
+    .goal-title {
+      font-size: 8rem;
       color: #facc15;
-      text-shadow: 0 0 20px #eab308, 0 0 40px #ca8a04;
-      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite alternate;
+      text-shadow: 0 0 20px #facc15, 0 0 50px #eab308;
+      animation: zoomPulse 0.5s ease-in-out infinite alternate;
     }
 
-    .goal-team {
-      font-size: 3rem;
-      color: #fff;
-      margin-top: 10px;
+    .goal-team-name {
+      font-size: 3.5rem;
+      color: #ffffff;
       text-transform: uppercase;
+      margin-top: 10px;
+      letter-spacing: 3px;
     }
 
-    @keyframes popIn {
-      0% { transform: scale(0.9); }
-      100% { transform: scale(1.1); }
+    @keyframes zoomPulse {
+      from { transform: scale(0.95); }
+      to { transform: scale(1.08); }
     }
   </style>
 </head>
 <body>
 
-<div class="scoreboard">
-  <!-- OVERLAY DE GOL -->
-  <div class="goal-overlay" id="goalOverlay">
-    <div class="goal-text">¡GOOOOOL!</div>
-    <div class="goal-team" id="goalTeamName">LOCAL</div>
+  <!-- CARTEL SUPERPUESTO DE GOL -->
+  <div id="goalOverlay">
+    <div class="goal-title">¡GOOOOOL!</div>
+    <div class="goal-team-name" id="goalTeamName">LOCAL</div>
   </div>
 
-  <div class="header" id="categoryDisplay">CATEGORIA 2014</div>
-  
-  <div class="main-body">
-    <div class="team">
-      <img id="homeLogo" src="" style="display:none;">
-      <div class="team-name" id="homeName">LOCAL</div>
-      <div class="score" id="homeScore">0</div>
-    </div>
+  <div class="scoreboard">
+    <div class="header" id="categoryDisplay">CATEGORIA 2014</div>
+    <div class="main-body">
+      <div class="team">
+        <img id="homeLogo" src="" style="display:none;">
+        <div class="team-name" id="homeName">LOCAL</div>
+        <div class="score" id="homeScore">0</div>
+      </div>
 
-    <div class="center-info">
-      <div class="period" id="periodDisplay">1T</div>
-      <div class="timer" id="timerDisplay">00:00</div>
-    </div>
+      <div class="center-info">
+        <div class="period" id="periodDisplay">1T</div>
+        <div class="timer" id="timerDisplay">00:00</div>
+      </div>
 
-    <div class="team">
-      <img id="awayLogo" src="" style="display:none;">
-      <div class="team-name" id="awayName">VISITANTE</div>
-      <div class="score" id="awayScore">0</div>
+      <div class="team">
+        <img id="awayLogo" src="" style="display:none;">
+        <div class="team-name" id="awayName">VISITANTE</div>
+        <div class="score" id="awayScore">0</div>
+      </div>
     </div>
   </div>
-</div>
 
 <script>
   const socket = io();
 
-  // Variables de control inicializadas
-  let previousHomeScore = 0;
-  let previousAwayScore = 0;
-  let isInitialLoad = true;
-  let goalTimeout = null;
+  let lastHomeScore = null;
+  let lastAwayScore = null;
+  let goalTimer = null;
 
   function formatTime(sec) {
     const m = Math.floor(sec / 60).toString().padStart(2, '0');
@@ -109,44 +108,44 @@
     return `${m}:${s}`;
   }
 
-  function triggerGoalAnimation(teamName) {
+  function showGoalBanner(teamName) {
     const overlay = document.getElementById('goalOverlay');
     const teamLabel = document.getElementById('goalTeamName');
 
     teamLabel.textContent = teamName;
-    overlay.classList.add('show');
+    overlay.classList.add('active');
 
-    if (goalTimeout) clearTimeout(goalTimeout);
-    goalTimeout = setTimeout(() => {
-      overlay.classList.remove('show');
-    }, 3500); // 3.5 segundos de duración
+    if (goalTimer) clearTimeout(goalTimer);
+    goalTimer = setTimeout(() => {
+      overlay.classList.remove('active');
+    }, 4000); // Se muestra durante 4 segundos
   }
 
-  socket.on('updateState', (state) => {
-    const currentHomeScore = Number(state.homeScore || 0);
-    const currentAwayScore = Number(state.awayScore || 0);
+  // Escuchar evento explícito de gol
+  socket.on('triggerGoal', (data) => {
+    showGoalBanner(data.teamName);
+  });
 
-    // Evita saltar al cargar la pantalla por primera vez
-    if (!isInitialLoad) {
-      if (currentHomeScore > previousHomeScore) {
-        triggerGoalAnimation(state.homeName || 'LOCAL');
-      } else if (currentAwayScore > previousAwayScore) {
-        triggerGoalAnimation(state.awayName || 'VISITANTE');
-      }
-    } else {
-      isInitialLoad = false;
+  socket.on('updateState', (state) => {
+    const newHomeScore = Number(state.homeScore || 0);
+    const newAwayScore = Number(state.awayScore || 0);
+
+    // Detección automática por incremento de marcador
+    if (lastHomeScore !== null && newHomeScore > lastHomeScore) {
+      showGoalBanner(state.homeName || 'LOCAL');
+    } else if (lastAwayScore !== null && newAwayScore > lastAwayScore) {
+      showGoalBanner(state.awayName || 'VISITANTE');
     }
 
-    // Actualiza marcadores para la siguiente comparación
-    previousHomeScore = currentHomeScore;
-    previousAwayScore = currentAwayScore;
+    lastHomeScore = newHomeScore;
+    lastAwayScore = newAwayScore;
 
-    // Actualizar elementos de la pantalla
+    // Actualizar elementos
     document.getElementById('categoryDisplay').textContent = state.category || 'CATEGORIA';
     document.getElementById('homeName').textContent = state.homeName || 'LOCAL';
     document.getElementById('awayName').textContent = state.awayName || 'VISITANTE';
-    document.getElementById('homeScore').textContent = currentHomeScore;
-    document.getElementById('awayScore').textContent = currentAwayScore;
+    document.getElementById('homeScore').textContent = newHomeScore;
+    document.getElementById('awayScore').textContent = newAwayScore;
     document.getElementById('periodDisplay').textContent = state.period || '1T';
     document.getElementById('timerDisplay').textContent = formatTime(state.seconds || 0);
 
