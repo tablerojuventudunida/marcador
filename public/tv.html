@@ -29,7 +29,7 @@
     .goal-overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0, 0, 0, 0.88);
       display: flex; flex-direction: column;
       justify-content: center; align-items: center;
       z-index: 100;
@@ -47,7 +47,7 @@
       font-size: 7rem;
       color: #facc15;
       text-shadow: 0 0 20px #eab308, 0 0 40px #ca8a04;
-      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite alternate;
+      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite alternate;
     }
 
     .goal-team {
@@ -97,8 +97,10 @@
 <script>
   const socket = io();
 
-  let previousHomeScore = null;
-  let previousAwayScore = null;
+  // Variables de control inicializadas
+  let previousHomeScore = 0;
+  let previousAwayScore = 0;
+  let isInitialLoad = true;
   let goalTimeout = null;
 
   function formatTime(sec) {
@@ -117,27 +119,34 @@
     if (goalTimeout) clearTimeout(goalTimeout);
     goalTimeout = setTimeout(() => {
       overlay.classList.remove('show');
-    }, 3500); // Duración de la animación: 3.5 segundos
+    }, 3500); // 3.5 segundos de duración
   }
 
   socket.on('updateState', (state) => {
-    // Detectar si hubo un gol
-    if (previousHomeScore !== null && state.homeScore > previousHomeScore) {
-      triggerGoalAnimation(state.homeName || 'LOCAL');
-    } else if (previousAwayScore !== null && state.awayScore > previousAwayScore) {
-      triggerGoalAnimation(state.awayName || 'VISITANTE');
+    const currentHomeScore = Number(state.homeScore || 0);
+    const currentAwayScore = Number(state.awayScore || 0);
+
+    // Evita saltar al cargar la pantalla por primera vez
+    if (!isInitialLoad) {
+      if (currentHomeScore > previousHomeScore) {
+        triggerGoalAnimation(state.homeName || 'LOCAL');
+      } else if (currentAwayScore > previousAwayScore) {
+        triggerGoalAnimation(state.awayName || 'VISITANTE');
+      }
+    } else {
+      isInitialLoad = false;
     }
 
-    // Guardar estados de goles para comparar en el próximo evento
-    previousHomeScore = state.homeScore;
-    previousAwayScore = state.awayScore;
+    // Actualiza marcadores para la siguiente comparación
+    previousHomeScore = currentHomeScore;
+    previousAwayScore = currentAwayScore;
 
-    // Actualizar pantalla
+    // Actualizar elementos de la pantalla
     document.getElementById('categoryDisplay').textContent = state.category || 'CATEGORIA';
     document.getElementById('homeName').textContent = state.homeName || 'LOCAL';
     document.getElementById('awayName').textContent = state.awayName || 'VISITANTE';
-    document.getElementById('homeScore').textContent = state.homeScore;
-    document.getElementById('awayScore').textContent = state.awayScore;
+    document.getElementById('homeScore').textContent = currentHomeScore;
+    document.getElementById('awayScore').textContent = currentAwayScore;
     document.getElementById('periodDisplay').textContent = state.period || '1T';
     document.getElementById('timerDisplay').textContent = formatTime(state.seconds || 0);
 
