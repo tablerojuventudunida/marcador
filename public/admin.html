@@ -61,6 +61,10 @@
 
     <label>Periodo</label>
     <input type="text" id="periodInput" placeholder="Ej: 1T, 2T, ST">
+
+    <!-- NUEVO CAMPO DE FONDO DE PANTALLA -->
+    <label>Fondo de Pantalla (URL)</label>
+    <input type="text" id="bgUrlInput" placeholder="https://ejemplo.com/imagen.jpg">
   </div>
 
   <!-- GOLES -->
@@ -99,35 +103,32 @@
   const socket = io();
   let currentState = {};
 
-  // Función para formatear segundos a MM:SS
   function formatTime(sec) {
     const m = Math.floor(sec / 60).toString().padStart(2, '0');
     const s = (sec % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   }
 
-  // Lista de inputs de texto
+  // Se añade bgUrl a la lista de inputs
   const inputs = {
     category: document.getElementById('categoryInput'),
     homeName: document.getElementById('homeNameInput'),
     awayName: document.getElementById('awayNameInput'),
     homeLogo: document.getElementById('homeLogoInput'),
     awayLogo: document.getElementById('awayLogoInput'),
-    period: document.getElementById('periodInput')
+    period: document.getElementById('periodInput'),
+    bgUrl: document.getElementById('bgUrlInput')
   };
 
-  // Escuchar la actualización desde el servidor
   socket.on('updateState', (state) => {
     currentState = state;
 
-    // Actualizar texto solo si el usuario NO está enfocado escribiendo en ese input
     Object.keys(inputs).forEach(key => {
       if (inputs[key] && document.activeElement !== inputs[key]) {
         inputs[key].value = state[key] !== undefined ? state[key] : '';
       }
     });
 
-    // Actualizar etiquetas y marcadores visuales
     document.getElementById('homeNameLabel').textContent = state.homeName || 'LOCAL';
     document.getElementById('awayNameLabel').textContent = state.awayName || 'VISITANTE';
     document.getElementById('homeScoreDisplay').textContent = state.homeScore;
@@ -144,7 +145,6 @@
     }
   });
 
-  // Emitir cambios cuando el usuario modifica un input (evento 'input')
   Object.keys(inputs).forEach(key => {
     inputs[key].addEventListener('input', (e) => {
       const updateData = {};
@@ -153,7 +153,6 @@
     });
   });
 
-  // Modificar goles
   function changeScore(team, delta) {
     const newScore = Math.max(0, (currentState[team] || 0) + delta);
     const updateData = {};
@@ -161,12 +160,10 @@
     socket.emit('updateState', updateData);
   }
 
-  // Iniciar/Pausar tiempo
   function toggleTimer() {
     socket.emit('updateState', { timerRunning: !currentState.timerRunning });
   }
 
-  // Reiniciar tiempo
   function resetTimer() {
     socket.emit('updateState', { seconds: 0, timerRunning: false });
   }
