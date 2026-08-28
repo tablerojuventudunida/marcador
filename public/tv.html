@@ -20,61 +20,69 @@
       left: 20px;
       display: flex;
       align-items: center;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(15, 23, 42, 0.9);
       color: white;
-      border-radius: 8px;
-      padding: 10px 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      border-radius: 12px;
+      padding: 10px 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
     }
 
     .team-logo {
-      width: 40px;
-      height: 40px;
+      width: 45px;
+      height: 45px;
       object-fit: contain;
-      margin: 0 8px;
+      margin: 0 10px;
     }
 
     .team-name {
-      font-size: 20px;
+      font-size: 22px;
       font-weight: bold;
       text-transform: uppercase;
       padding: 0 10px;
     }
 
     .score {
-      font-size: 26px;
-      background: #ffcc00;
-      color: black;
-      padding: 2px 12px;
-      border-radius: 5px;
+      font-size: 28px;
+      background: #38bdf8;
+      color: #0f172a;
+      padding: 4px 14px;
+      border-radius: 8px;
       margin: 0 5px;
+      font-weight: 900;
     }
 
     .timer-box {
-      margin-left: 15px;
-      border-left: 2px solid #555;
+      margin-left: 20px;
+      border-left: 2px solid #334155;
       padding-left: 15px;
-      text-align: center;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .period-badge {
+      background: #ef4444;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: bold;
     }
 
     .timer {
-      font-size: 22px;
-      color: #00ffcc;
+      font-size: 24px;
+      color: #ffffff;
+      font-family: monospace;
     }
 
-    .period {
-      font-size: 12px;
-      color: #aaa;
-    }
-
-    /* OVERLAY / CARTEL ANIMADO DE GOL */
+    /* OVERLAY ANIMADO DE GOL */
     #goal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.8);
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -90,16 +98,16 @@
     }
 
     .goal-title {
-      font-size: 110px;
-      color: #ffcc00;
-      text-shadow: 0 0 20px #ff0000, 0 0 40px #ffcc00;
+      font-size: 120px;
+      color: #eab308;
+      text-shadow: 0 0 20px #ef4444, 0 0 40px #eab308;
       animation: pulse 0.6s infinite alternate;
       margin: 0;
       text-transform: uppercase;
     }
 
     .goal-team {
-      font-size: 50px;
+      font-size: 55px;
       color: white;
       margin-top: 10px;
       text-shadow: 0 2px 10px rgba(0,0,0,0.8);
@@ -115,17 +123,17 @@
 <body>
 
   <div id="scoreboard">
-    <span class="team-name" id="homeName">LOCAL</span>
     <img id="homeLogo" class="team-logo" style="display:none;">
+    <span class="team-name" id="homeName">LOCAL</span>
     <span class="score" id="homeScore">0</span>
-    <span>-</span>
+    <span style="font-size:20px; color:#64748b;">:</span>
     <span class="score" id="awayScore">0</span>
-    <img id="awayLogo" class="team-logo" style="display:none;">
     <span class="team-name" id="awayName">VISITANTE</span>
+    <img id="awayLogo" class="team-logo" style="display:none;">
 
     <div class="timer-box">
-      <div class="timer" id="timer">00:00</div>
-      <div class="period" id="period">1T</div>
+      <span class="period-badge" id="period">1T</span>
+      <span class="timer" id="timer">00:00</span>
     </div>
   </div>
 
@@ -141,12 +149,14 @@
     socket.on('updateState', (state) => {
       document.getElementById('homeName').innerText = state.homeName || 'LOCAL';
       document.getElementById('awayName').innerText = state.awayName || 'VISITANTE';
-      document.getElementById('homeScore').innerText = state.homeScore;
-      document.getElementById('awayScore').innerText = state.awayScore;
+      document.getElementById('homeScore').innerText = state.homeScore !== undefined ? state.homeScore : 0;
+      document.getElementById('awayScore').innerText = state.awayScore !== undefined ? state.awayScore : 0;
+      
+      // AQUÍ SE CORRIGE EL PERÍODO (1T, 2T, etc.)
       document.getElementById('period').innerText = state.period || '1T';
 
-      let mins = Math.floor(state.seconds / 60).toString().padStart(2, '0');
-      let secs = (state.seconds % 60).toString().padStart(2, '0');
+      let mins = Math.floor((state.seconds || 0) / 60).toString().padStart(2, '0');
+      let secs = ((state.seconds || 0) % 60).toString().padStart(2, '0');
       document.getElementById('timer').innerText = `${mins}:${secs}`;
 
       if (state.homeLogo) {
@@ -164,7 +174,6 @@
       }
     });
 
-    // Escuchar el disparo de Gol
     socket.on('triggerGoal', (data) => {
       const overlay = document.getElementById('goal-overlay');
       const teamLabel = document.getElementById('goalTeamName');
@@ -172,7 +181,6 @@
       teamLabel.innerText = data.teamName;
       overlay.classList.add('active');
 
-      // Ocultar la animación automáticamente a los 5 segundos
       setTimeout(() => {
         overlay.classList.remove('active');
       }, 5000);
