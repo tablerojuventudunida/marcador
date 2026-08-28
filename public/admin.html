@@ -24,6 +24,7 @@
     .btn-sub { background: #ef4444; color: #fff; }
     .btn-primary { background: #3b82f6; color: #fff; }
     .btn-warning { background: #f59e0b; color: #fff; }
+    .btn-goal { background: #eab308; color: #0f172a; font-size: 1.1rem; padding: 14px; text-transform: uppercase; font-weight: 900; }
     .timer-display { font-size: 2rem; font-family: monospace; text-align: center; }
   </style>
 </head>
@@ -31,6 +32,15 @@
 
 <div class="container">
   <h1>Control de Marcador</h1>
+
+  <!-- BOTONES DE ANIMACIÓN DE GOL -->
+  <div class="card">
+    <label style="text-align:center;">Goles con Animación TV</label>
+    <div class="btn-group">
+      <button class="btn-goal" onclick="triggerGoal('home')">⚽ GOL LOCAL</button>
+      <button class="btn-goal" onclick="triggerGoal('away')">⚽ GOL VISITANTE</button>
+    </div>
+  </div>
 
   <!-- CONFIGURACIÓN DE EQUIPOS Y CATEGORÍA -->
   <div class="card">
@@ -62,12 +72,11 @@
     <label>Periodo</label>
     <input type="text" id="periodInput" placeholder="Ej: 1T, 2T, ST">
 
-    <!-- NUEVO CAMPO DE FONDO DE PANTALLA -->
     <label>Fondo de Pantalla (URL)</label>
     <input type="text" id="bgUrlInput" placeholder="https://ejemplo.com/imagen.jpg">
   </div>
 
-  <!-- GOLES -->
+  <!-- GOLES MANUALES -->
   <div class="score-controls">
     <div class="team-box">
       <span id="homeNameLabel" style="font-weight: bold;">LOCAL</span>
@@ -109,7 +118,6 @@
     return `${m}:${s}`;
   }
 
-  // Se añade bgUrl a la lista de inputs
   const inputs = {
     category: document.getElementById('categoryInput'),
     homeName: document.getElementById('homeNameInput'),
@@ -158,6 +166,18 @@
     const updateData = {};
     updateData[team] = newScore;
     socket.emit('updateState', updateData);
+  }
+
+  function triggerGoal(team) {
+    if (team === 'home') {
+      const newScore = (currentState.homeScore || 0) + 1;
+      socket.emit('updateState', { homeScore: newScore });
+      socket.emit('triggerGoal', { teamName: currentState.homeName || 'LOCAL' });
+    } else {
+      const newScore = (currentState.awayScore || 0) + 1;
+      socket.emit('updateState', { awayScore: newScore });
+      socket.emit('triggerGoal', { teamName: currentState.awayName || 'VISITANTE' });
+    }
   }
 
   function toggleTimer() {
