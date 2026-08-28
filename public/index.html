@@ -6,52 +6,48 @@
   <title>Panel de Control - Marcador</title>
   <script src="/socket.io/socket.io.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 20px; background: #222; color: #fff; max-width: 600px; margin: auto; }
-    h1 { text-align: center; }
-    .group { background: #333; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-    label { display: block; margin-top: 10px; font-weight: bold; }
-    input, select { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
-    .flex { display: flex; gap: 10px; margin-top: 10px; }
-    button { flex: 1; padding: 12px; font-weight: bold; cursor: pointer; border: none; border-radius: 5px; }
-    .btn-green { background: #28a745; color: white; }
-    .btn-red { background: #dc3545; color: white; }
-    .btn-blue { background: #007bff; color: white; }
-    .btn-yellow { background: #ffc107; color: #000; font-size: 1.1em; text-transform: uppercase; }
+    body { font-family: sans-serif; padding: 20px; background: #0f172a; color: #fff; max-width: 700px; margin: auto; }
+    h1, h3 { text-align: center; color: #f8fafc; }
+    .group { background: #1e293b; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
+    label { display: block; margin-top: 10px; font-weight: bold; color: #94a3b8; }
+    input, select { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 6px; }
+    .flex { display: flex; gap: 10px; margin-top: 10px; align-items: center; }
+    button { flex: 1; padding: 12px; font-weight: bold; cursor: pointer; border: none; border-radius: 6px; font-size: 1rem; }
+    .btn-green { background: #22c55e; color: white; }
+    .btn-red { background: #ef4444; color: white; }
+    .btn-blue { background: #3b82f6; color: white; }
+    .btn-yellow { background: #eab308; color: #0f172a; font-size: 1.1em; text-transform: uppercase; font-weight: 800; }
   </style>
 </head>
 <body>
 
-  <h1>Control de Marcador</h1>
+  <h1>Panel de Control del Marcador</h1>
 
+  <!-- DATOS DE EQUIPOS -->
   <div class="group">
+    <h3>Información General</h3>
     <label>Categoría / Torneo:</label>
-    <input type="text" id="category" value="CATEGORIA 2014">
+    <input type="text" id="category" value="CATEGORIA 2019">
 
-    <label>Equipo Local:</label>
-    <input type="text" id="homeName" value="LOCAL">
-    <label>Logo Local (URL):</label>
-    <input type="text" id="homeLogo">
+    <div class="flex">
+      <div style="flex:1;">
+        <label>Equipo Local:</label>
+        <input type="text" id="homeName" value="JUVENTUD UNIDA">
+        <label>URL Escudo Local:</label>
+        <input type="text" id="homeLogo" placeholder="https://...">
+      </div>
+      <div style="flex:1;">
+        <label>Equipo Visitante:</label>
+        <input type="text" id="awayName" value="VISITANTE">
+        <label>URL Escudo Visitante:</label>
+        <input type="text" id="awayLogo" placeholder="https://...">
+      </div>
+    </div>
 
-    <label>Equipo Visitante:</label>
-    <input type="text" id="awayName" value="VISITANTE">
-    <label>Logo Visitante (URL):</label>
-    <input type="text" id="awayLogo">
-
-    <label>Fondo TV (URL):</label>
-    <input type="text" id="bgUrl">
-    
-    <label>Periodo:</label>
-    <select id="period">
-      <option value="1T">1T (Primer Tiempo)</option>
-      <option value="2T">2T (Segundo Tiempo)</option>
-      <option value="ET">ET (Entre Tiempo)</option>
-      <option value="ST">ST (Sin Tiempo)</option>
-    </select>
-    
-    <button class="btn-blue" style="width:100%; margin-top:15px;" onclick="saveInfo()">Guardar Nombres / Logos</button>
+    <button class="btn-yellow" style="width:100%; margin-top:15px;" onclick="saveTeams()">Aplicar Datos de Equipos</button>
   </div>
 
-  <!-- BANDERAS DE GOL DIRECTO CON ANIMACIÓN -->
+  <!-- BOTONES DE ANIMACIÓN DE GOL -->
   <div class="group">
     <h3>Animación de Gol</h3>
     <div class="flex">
@@ -60,29 +56,50 @@
     </div>
   </div>
 
+  <!-- MARCADOR MANUAL -->
   <div class="group">
     <h3>Marcador Manual</h3>
-    <p>Local: <span id="lblHome">0</span> | Visitante: <span id="lblAway">0</span></p>
+    <p style="text-align:center; font-size: 1.2rem;">Local: <strong id="lblHome">0</strong> | Visitante: <strong id="lblAway">0</strong></p>
     <div class="flex">
-      <button class="btn-green" onclick="addScore('home', 1)">+1 Local</button>
-      <button class="btn-red" onclick="addScore('home', -1)">-1 Local</button>
-    </div>
-    <div class="flex">
-      <button class="btn-green" onclick="addScore('away', 1)">+1 Visitante</button>
-      <button class="btn-red" onclick="addScore('away', -1)">-1 Visitante</button>
+      <button class="btn-red" onclick="addScore('home', -1)">-1</button>
+      <span style="font-size:1.2rem; font-weight:bold;">0</span>
+      <button class="btn-blue" onclick="addScore('home', 1)">+1</button>
+      <div style="width: 20px;"></div>
+      <button class="btn-red" onclick="addScore('away', -1)">-1</button>
+      <span style="font-size:1.2rem; font-weight:bold;">0</span>
+      <button class="btn-blue" onclick="addScore('away', 1)">+1</button>
     </div>
   </div>
 
+  <!-- CRONÓMETRO -->
   <div class="group">
-    <h3>Reloj: <span id="lblTimer">00:00</span></h3>
+    <h3>Cronómetro</h3>
     <div class="flex">
+      <div style="flex:1;">
+        <label>Período:</label>
+        <input type="text" id="period" value="1T">
+      </div>
+      <div style="flex:1;">
+        <label>Minutos:</label>
+        <input type="number" id="minutes" value="0">
+      </div>
+      <div style="flex:1;">
+        <label>Segundos:</label>
+        <input type="number" id="seconds" value="0">
+      </div>
+    </div>
+    <div class="flex" style="margin-top:15px;">
+      <button class="btn-yellow" onclick="setTimer()">Setear Tiempo</button>
       <button class="btn-green" onclick="toggleTimer(true)">Iniciar</button>
-      <button class="btn-red" onclick="toggleTimer(false)">Pausar</button>
+      <button class="btn-red" onclick="toggleTimer(false)">Reiniciar / Pausar</button>
     </div>
-    <div class="flex">
-      <input type="number" id="customMin" placeholder="Minutos" style="width: 50%;">
-      <button class="btn-blue" onclick="setTimer()">Ajustar Minutos</button>
-    </div>
+  </div>
+
+  <!-- FONDO -->
+  <div class="group">
+    <label>URL Fondo:</label>
+    <input type="text" id="bgUrl" placeholder="https://...">
+    <button class="btn-yellow" style="width:100%; margin-top:10px;" onclick="saveBg()">Aplicar Fondo</button>
   </div>
 
   <script>
@@ -94,29 +111,34 @@
       document.getElementById('lblHome').innerText = state.homeScore;
       document.getElementById('lblAway').innerText = state.awayScore;
       
-      let mins = Math.floor(state.seconds / 60).toString().padStart(2, '0');
-      let secs = (state.seconds % 60).toString().padStart(2, '0');
-      document.getElementById('lblTimer').innerText = `${mins}:${secs}`;
+      // Evitamos sobreescribir el campo de período si el usuario está escribiendo en él
+      if (document.activeElement !== document.getElementById('period')) {
+        document.getElementById('period').value = state.period || '1T';
+      }
     });
 
-    function saveInfo() {
+    function saveTeams() {
       socket.emit('updateState', {
         category: document.getElementById('category').value,
         homeName: document.getElementById('homeName').value,
         homeLogo: document.getElementById('homeLogo').value,
         awayName: document.getElementById('awayName').value,
-        awayLogo: document.getElementById('awayLogo').value,
-        bgUrl: document.getElementById('bgUrl').value,
-        period: document.getElementById('period').value
+        awayLogo: document.getElementById('awayLogo').value
+      });
+    }
+
+    function saveBg() {
+      socket.emit('updateState', {
+        bgUrl: document.getElementById('bgUrl').value
       });
     }
 
     function addScore(team, val) {
       if (team === 'home') {
-        let newScore = Math.max(0, currentState.homeScore + val);
+        let newScore = Math.max(0, (currentState.homeScore || 0) + val);
         socket.emit('updateState', { homeScore: newScore });
       } else {
-        let newScore = Math.max(0, currentState.awayScore + val);
+        let newScore = Math.max(0, (currentState.awayScore || 0) + val);
         socket.emit('updateState', { awayScore: newScore });
       }
     }
@@ -126,17 +148,22 @@
     }
 
     function setTimer() {
-      let min = parseInt(document.getElementById('customMin').value) || 0;
-      socket.emit('updateState', { seconds: min * 60 });
+      const periodVal = document.getElementById('period').value;
+      const mins = parseInt(document.getElementById('minutes').value) || 0;
+      const secs = parseInt(document.getElementById('seconds').value) || 0;
+      
+      socket.emit('updateState', {
+        period: periodVal,
+        seconds: (mins * 60) + secs
+      });
     }
 
-    // Disparar la animación de gol y sumar el punto
     function triggerGoal(team) {
       if (team === 'home') {
-        socket.emit('updateState', { homeScore: currentState.homeScore + 1 });
+        socket.emit('updateState', { homeScore: (currentState.homeScore || 0) + 1 });
         socket.emit('triggerGoal', { teamName: currentState.homeName || 'LOCAL' });
       } else {
-        socket.emit('updateState', { awayScore: currentState.awayScore + 1 });
+        socket.emit('updateState', { awayScore: (currentState.awayScore || 0) + 1 });
         socket.emit('triggerGoal', { teamName: currentState.awayName || 'VISITANTE' });
       }
     }
