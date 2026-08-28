@@ -2,188 +2,284 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Marcador TV</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tablero TV Profesional</title>
   <script src="/socket.io/socket.io.js"></script>
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      margin: 0;
-      padding: 0;
-      background: transparent;
-      font-family: 'Arial Black', sans-serif;
+      background-color: #060913;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      color: #ffffff;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 3vh 3vw;
       overflow: hidden;
     }
 
-    /* BARRA SUPERIOR DEL MARCADOR */
-    #scoreboard {
+    .overlay {
       position: absolute;
-      top: 20px;
-      left: 20px;
-      display: flex;
-      align-items: center;
-      background: rgba(15, 23, 42, 0.9);
-      color: white;
-      border-radius: 12px;
-      padding: 10px 20px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+      inset: 0;
+      background: radial-gradient(circle, rgba(15,23,42,0.6) 0%, rgba(6,9,19,0.95) 100%);
+      z-index: 1;
     }
 
-    .team-logo {
-      width: 45px;
-      height: 45px;
-      object-fit: contain;
-      margin: 0 10px;
+    .top-bar {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .category-badge {
+      font-size: 1.5vw;
+      font-weight: 900;
+      color: #ffffff;
+      background: rgba(15, 23, 42, 0.9);
+      padding: 8px 24px;
+      border-radius: 30px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .center-badge {
+      font-size: 2.2vw;
+      font-weight: 900;
+      color: #ffffff;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      padding: 10px 40px;
+      border-radius: 40px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      border: 2px solid #38bdf8;
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+    }
+
+    .header-badge {
+      font-size: 1.5vw;
+      font-weight: 900;
+      color: #060913;
+      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+      padding: 8px 24px;
+      border-radius: 30px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+    }
+
+    .main-container {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 96vw;
+      max-width: 1600px;
+      gap: 20px;
+    }
+
+    .scoreboard {
+      display: flex;
+      width: 100%;
+      height: 52vh;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(16px);
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+      overflow: hidden;
+    }
+
+    .team-card {
+      flex: 1;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      padding: 0 2.5vw;
+      gap: 2vw;
+    }
+
+    .shield-box {
+      width: 13vw;
+      height: 13vw;
+      max-width: 180px;
+      max-height: 180px;
+      background: #ffffff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      clip-path: circle(50% at 50% 50%);
+    }
+
+    .shield-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
     }
 
     .team-name {
-      font-size: 22px;
-      font-weight: bold;
+      font-size: 3vw;
+      font-weight: 900;
       text-transform: uppercase;
-      padding: 0 10px;
+      letter-spacing: 0.5px;
+      color: #ffffff;
+      white-space: normal;
+      word-break: normal;
+      line-height: 1.1;
     }
 
     .score {
-      font-size: 28px;
-      background: #38bdf8;
-      color: #0f172a;
-      padding: 4px 14px;
-      border-radius: 8px;
-      margin: 0 5px;
+      font-size: 11vw;
       font-weight: 900;
+      color: #38bdf8;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 0 25px rgba(56, 189, 248, 0.5);
+      line-height: 1;
+      padding: 0 1vw;
     }
 
-    .timer-box {
-      margin-left: 20px;
-      border-left: 2px solid #334155;
-      padding-left: 15px;
+    .vs-divider {
+      width: 2px;
+      height: 70%;
+      background: rgba(255, 255, 255, 0.15);
+      align-self: center;
+    }
+
+    .timer-card {
+      position: relative;
+      z-index: 2;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 20px;
+      background: rgba(15, 23, 42, 0.95);
+      padding: 12px 42px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
     }
 
-    .period-badge {
-      background: #ef4444;
-      color: white;
-      padding: 4px 8px;
-      border-radius: 5px;
-      font-size: 16px;
-      font-weight: bold;
-    }
-
-    .timer {
-      font-size: 24px;
+    .period-tag {
+      font-size: 2.2vw;
+      font-weight: 900;
       color: #ffffff;
+      background: #ef4444;
+      padding: 4px 16px;
+      border-radius: 8px;
+    }
+
+    .timer-text {
+      font-size: 4.5vw;
+      font-weight: 800;
       font-family: monospace;
-    }
-
-    /* OVERLAY ANIMADO DE GOL */
-    #goal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.8);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s ease;
-      z-index: 9999;
-    }
-
-    #goal-overlay.active {
-      opacity: 1;
-    }
-
-    .goal-title {
-      font-size: 120px;
-      color: #eab308;
-      text-shadow: 0 0 20px #ef4444, 0 0 40px #eab308;
-      animation: pulse 0.6s infinite alternate;
-      margin: 0;
-      text-transform: uppercase;
-    }
-
-    .goal-team {
-      font-size: 55px;
-      color: white;
-      margin-top: 10px;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-      text-transform: uppercase;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(0.95); }
-      100% { transform: scale(1.1); }
+      color: #ffffff;
+      letter-spacing: 2px;
     }
   </style>
 </head>
 <body>
 
-  <div id="scoreboard">
-    <img id="homeLogo" class="team-logo" style="display:none;">
-    <span class="team-name" id="homeName">LOCAL</span>
-    <span class="score" id="homeScore">0</span>
-    <span style="font-size:20px; color:#64748b;">:</span>
-    <span class="score" id="awayScore">0</span>
-    <span class="team-name" id="awayName">VISITANTE</span>
-    <img id="awayLogo" class="team-logo" style="display:none;">
+  <div class="overlay"></div>
 
-    <div class="timer-box">
-      <span class="period-badge" id="period">1T</span>
-      <span class="timer" id="timer">00:00</span>
+  <div class="top-bar">
+    <div class="category-badge" id="categoryName">CATEGORIA 2014</div>
+    <div class="center-badge">VILLA SOLDATI</div>
+    <div class="header-badge">Partido en Vivo</div>
+  </div>
+
+  <div class="main-container">
+    <div class="scoreboard">
+      <!-- Local -->
+      <div class="team-card">
+        <div class="shield-box" id="homeShieldContainer" style="display: none;">
+          <img id="homeBadge" src="" alt="">
+        </div>
+        <div class="team-name" id="homeName">LOCAL</div>
+        <div class="score" id="homeScore">0</div>
+      </div>
+
+      <div class="vs-divider"></div>
+
+      <!-- Visitante -->
+      <div class="team-card" style="grid-template-columns: auto 1fr auto; direction: rtl;">
+        <div class="shield-box" id="awayShieldContainer" style="direction: ltr; display: none;">
+          <img id="awayBadge" src="" alt="">
+        </div>
+        <div class="team-name" id="awayName" style="direction: ltr; text-align: right;">VISITANTE</div>
+        <div class="score" id="awayScore" style="direction: ltr;">0</div>
+      </div>
     </div>
   </div>
 
-  <!-- CARTEL DE GOL -->
-  <div id="goal-overlay">
-    <h1 class="goal-title">¡¡GOOOOOL!!</h1>
-    <div class="goal-team" id="goalTeamName">EQUIPO</div>
+  <div class="timer-card">
+    <div class="period-tag" id="period">1T</div>
+    <div class="timer-text" id="clock">00:00</div>
   </div>
 
   <script>
     const socket = io();
 
+    function formatTime(totalSeconds) {
+      const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+      const s = (totalSeconds % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
     socket.on('updateState', (state) => {
       document.getElementById('homeName').innerText = state.homeName || 'LOCAL';
       document.getElementById('awayName').innerText = state.awayName || 'VISITANTE';
-      document.getElementById('homeScore').innerText = state.homeScore !== undefined ? state.homeScore : 0;
-      document.getElementById('awayScore').innerText = state.awayScore !== undefined ? state.awayScore : 0;
+      document.getElementById('homeScore').innerText = state.homeScore;
+      document.getElementById('awayScore').innerText = state.awayScore;
+      document.getElementById('clock').innerText = formatTime(state.seconds);
+      document.getElementById('period').innerText = state.period;
       
-      // AQUÍ SE CORRIGE EL PERÍODO (1T, 2T, etc.)
-      document.getElementById('period').innerText = state.period || '1T';
-
-      let mins = Math.floor((state.seconds || 0) / 60).toString().padStart(2, '0');
-      let secs = ((state.seconds || 0) % 60).toString().padStart(2, '0');
-      document.getElementById('timer').innerText = `${mins}:${secs}`;
-
-      if (state.homeLogo) {
-        document.getElementById('homeLogo').src = state.homeLogo;
-        document.getElementById('homeLogo').style.display = 'inline';
+      const catElem = document.getElementById('categoryName');
+      if (state.category) {
+        catElem.innerText = state.category;
+        catElem.style.visibility = 'visible';
       } else {
-        document.getElementById('homeLogo').style.display = 'none';
+        catElem.style.visibility = 'hidden';
       }
 
-      if (state.awayLogo) {
-        document.getElementById('awayLogo').src = state.awayLogo;
-        document.getElementById('awayLogo').style.display = 'inline';
+      // Renderizado correcto de escudos
+      const homeBadge = document.getElementById('homeBadge');
+      const homeBox = document.getElementById('homeShieldContainer');
+      if (state.homeLogo && state.homeLogo.trim() !== '') {
+        homeBadge.src = state.homeLogo;
+        homeBox.style.display = 'flex';
       } else {
-        document.getElementById('awayLogo').style.display = 'none';
+        homeBox.style.display = 'none';
       }
-    });
 
-    socket.on('triggerGoal', (data) => {
-      const overlay = document.getElementById('goal-overlay');
-      const teamLabel = document.getElementById('goalTeamName');
+      const awayBadge = document.getElementById('awayBadge');
+      const awayBox = document.getElementById('awayShieldContainer');
+      if (state.awayLogo && state.awayLogo.trim() !== '') {
+        awayBadge.src = state.awayLogo;
+        awayBox.style.display = 'flex';
+      } else {
+        awayBox.style.display = 'none';
+      }
 
-      teamLabel.innerText = data.teamName;
-      overlay.classList.add('active');
-
-      setTimeout(() => {
-        overlay.classList.remove('active');
-      }, 5000);
+      // Renderizado correcto del fondo
+      if (state.bgUrl && state.bgUrl.trim() !== '') {
+        document.body.style.backgroundImage = `url('${state.bgUrl}')`;
+      } else {
+        document.body.style.backgroundImage = 'none';
+      }
     });
   </script>
 </body>
