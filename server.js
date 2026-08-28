@@ -49,7 +49,7 @@ io.on('connection', (socket) => {
     io.emit('updateState', gameState);
   });
 
-  // Reenvía el disparo de animación de gol
+  // Evento que retransmite la animación de gol a la TV
   socket.on('triggerGoal', (data) => {
     io.emit('triggerGoal', data);
   });
