@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tablero TV Profesional</title>
+  <!-- IMPORTACIÓN DE FUENTE EXACTA (ANTON) DESDE GOOGLE FONTS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
   <script src="/socket.io/socket.io.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,7 +18,7 @@
       background-position: center;
       background-repeat: no-repeat;
       color: #ffffff;
-      font-family: 'Impact', 'Trebuchet MS', 'Arial Black', sans-serif;
+      font-family: 'Anton', 'Impact', sans-serif;
       height: 100vh;
       display: flex;
       flex-direction: column;
@@ -43,7 +47,7 @@
 
     .category-badge {
       font-size: 1.7vw;
-      font-weight: 900;
+      font-weight: 400;
       color: #ffffff;
       background: rgba(15, 23, 42, 0.9);
       padding: 10px 28px;
@@ -56,7 +60,7 @@
 
     .center-badge {
       font-size: 2.4vw;
-      font-weight: 900;
+      font-weight: 400;
       color: #ffffff;
       background: linear-gradient(135deg, #1e293b, #0f172a);
       padding: 12px 45px;
@@ -69,7 +73,7 @@
 
     .header-badge {
       font-size: 1.7vw;
-      font-weight: 900;
+      font-weight: 400;
       color: #060913;
       background: linear-gradient(90deg, #f59e0b, #fbbf24);
       padding: 10px 28px;
@@ -134,10 +138,10 @@
       border-radius: 50%;
     }
 
-    /* NOMBRE DE EQUIPO CON TIPOGRAFÍA ULTRAGRUESA */
+    /* NOMBRE DE EQUIPO CON TIPOGRAFÍA ANTON */
     .team-name {
       font-size: 3.8vw;
-      font-weight: 900;
+      font-weight: 400;
       text-transform: uppercase;
       letter-spacing: 1.5px;
       color: #ffffff;
@@ -145,19 +149,17 @@
       word-break: normal;
       line-height: 1;
       text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
-      -webkit-text-stroke: 1px #000;
     }
 
-    /* NÚMEROS DEL MARCADOR HIPER VISIBLES */
+    /* NÚMEROS DEL MARCADOR ANTON */
     .score {
       font-size: 13vw;
-      font-weight: 900;
+      font-weight: 400;
       color: #38bdf8;
       font-variant-numeric: tabular-nums;
       text-shadow: 0 0 35px rgba(56, 189, 248, 0.7), 4px 4px 0px #000;
       line-height: 1;
       padding: 0 1vw;
-      -webkit-text-stroke: 2px #0284c7;
     }
 
     .vs-divider {
@@ -181,7 +183,7 @@
 
     .period-tag {
       font-size: 2.5vw;
-      font-weight: 900;
+      font-weight: 400;
       color: #ffffff;
       background: #ef4444;
       padding: 4px 20px;
@@ -191,8 +193,7 @@
 
     .timer-text {
       font-size: 5vw;
-      font-weight: 900;
-      font-family: 'Impact', monospace;
+      font-weight: 400;
       color: #ffffff;
       letter-spacing: 3px;
       text-shadow: 3px 3px 5px rgba(0,0,0,0.8);
@@ -220,13 +221,12 @@
 
     .goal-title {
       font-size: 14vw;
-      font-weight: 900;
+      font-weight: 400;
       color: #f59e0b;
       text-shadow: 0 0 60px rgba(245, 158, 11, 0.9), 0 0 20px #ffffff;
       letter-spacing: 10px;
       transform: scale(0.5);
       transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      -webkit-text-stroke: 3px #78350f;
     }
 
     .goal-overlay.active .goal-title {
@@ -236,13 +236,12 @@
 
     .goal-team {
       font-size: 6vw;
-      font-weight: 900;
+      font-weight: 400;
       color: #ffffff;
       text-transform: uppercase;
       letter-spacing: 5px;
       margin-top: -20px;
       text-shadow: 0 0 25px rgba(255, 255, 255, 0.8), 3px 3px 0px #000;
-      -webkit-text-stroke: 1.5px #000;
     }
 
     @keyframes pulse {
@@ -320,12 +319,11 @@
 
         goalTimeout = setTimeout(() => {
           overlay.classList.remove('active');
-        }, 3000); // Muestra la animación durante 3 segundos
+        }, 3000);
       }
     }
 
     socket.on('updateState', (state) => {
-      // Detección automática por incremento en el marcador
       if (prevHomeScore !== null && state.homeScore > prevHomeScore) {
         triggerGoalAnimation(state.homeName || 'LOCAL');
       }
@@ -376,7 +374,6 @@
       }
     });
 
-    // ESCUCHA DIRECTA DEL EVENTO DE GOL (POR SI LO MANDAS DESDE SOCKET)
     socket.on('triggerGoal', (data) => {
       triggerGoalAnimation(data.teamName);
     });
