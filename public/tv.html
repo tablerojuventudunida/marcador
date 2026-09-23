@@ -1,16 +1,18 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tablero TV Profesional</title>
-  <!-- FUENTE GOOGLE MONTSERRAT PARA OBTENER EL DISEÑO REDONDO Y GRUESO -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
   <script src="/socket.io/socket.io.js"></script>
+
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
       background-color: #060913;
@@ -18,7 +20,7 @@
       background-position: center;
       background-repeat: no-repeat;
       color: #ffffff;
-      font-family: 'Montserrat', sans-serif;
+      font-family: 'Impact', 'Trebuchet MS', 'Arial Black', sans-serif;
       height: 100vh;
       display: flex;
       flex-direction: column;
@@ -32,7 +34,11 @@
     .overlay {
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle, rgba(15,23,42,0.6) 0%, rgba(6,9,19,0.95) 100%);
+      background: radial-gradient(
+        circle,
+        rgba(15,23,42,0.6) 0%,
+        rgba(6,9,19,0.95) 100%
+      );
       z-index: 1;
     }
 
@@ -138,7 +144,6 @@
       border-radius: 50%;
     }
 
-    /* NOMBRE DE EQUIPO CON TIPOGRAFÍA ULTRAGRUESA REDONDA */
     .team-name {
       font-size: 3.8vw;
       font-weight: 900;
@@ -149,17 +154,20 @@
       word-break: normal;
       line-height: 1;
       text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
+      -webkit-text-stroke: 1px #000;
     }
 
-    /* NÚMEROS DEL MARCADOR HIPER VISIBLES */
     .score {
       font-size: 13vw;
       font-weight: 900;
       color: #38bdf8;
       font-variant-numeric: tabular-nums;
-      text-shadow: 0 0 35px rgba(56, 189, 248, 0.7), 4px 4px 0px #000;
+      text-shadow:
+        0 0 35px rgba(56, 189, 248, 0.7),
+        4px 4px 0px #000;
       line-height: 1;
       padding: 0 1vw;
+      -webkit-text-stroke: 2px #0284c7;
     }
 
     .vs-divider {
@@ -194,13 +202,16 @@
     .timer-text {
       font-size: 5vw;
       font-weight: 900;
-      font-family: 'Montserrat', sans-serif;
+      font-family: 'Impact', monospace;
       color: #ffffff;
       letter-spacing: 3px;
       text-shadow: 3px 3px 5px rgba(0,0,0,0.8);
     }
 
-    /* ANIMACIÓN DE GOL */
+    /* =====================================================
+       ANIMACIÓN DE GOL
+       ===================================================== */
+
     .goal-overlay {
       position: fixed;
       inset: 0;
@@ -224,10 +235,14 @@
       font-size: 14vw;
       font-weight: 900;
       color: #f59e0b;
-      text-shadow: 0 0 60px rgba(245, 158, 11, 0.9), 0 0 20px #ffffff;
+      text-shadow:
+        0 0 60px rgba(245, 158, 11, 0.9),
+        0 0 20px #ffffff;
       letter-spacing: 10px;
       transform: scale(0.5);
-      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition:
+        transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      -webkit-text-stroke: 3px #78350f;
     }
 
     .goal-overlay.active .goal-title {
@@ -242,127 +257,525 @@
       text-transform: uppercase;
       letter-spacing: 5px;
       margin-top: -20px;
-      text-shadow: 0 0 25px rgba(255, 255, 255, 0.8), 3px 3px 0px #000;
+      text-shadow:
+        0 0 25px rgba(255, 255, 255, 0.8),
+        3px 3px 0px #000;
+      -webkit-text-stroke: 1.5px #000;
     }
 
     @keyframes pulse {
-      0% { transform: scale(1); }
-      100% { transform: scale(1.08); }
+      0% {
+        transform: scale(1);
+      }
+
+      100% {
+        transform: scale(1.08);
+      }
     }
+
+    /* Destello al marcar gol */
+    .goal-overlay.active::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        circle at center,
+        rgba(255,255,255,0.22) 0%,
+        rgba(245,158,11,0.10) 30%,
+        transparent 65%
+      );
+      animation: goalFlash 0.7s ease-out;
+      pointer-events: none;
+    }
+
+    @keyframes goalFlash {
+      0% {
+        opacity: 0;
+        transform: scale(0.7);
+      }
+
+      35% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(1.2);
+      }
+    }
+
   </style>
 </head>
+
 <body>
 
   <div class="overlay"></div>
 
-  <!-- OVERLAY ANIMACIÓN DE GOL -->
+  <!-- =====================================================
+       OVERLAY ANIMACIÓN DE GOL
+       ===================================================== -->
+
   <div class="goal-overlay" id="goalOverlay">
     <div class="goal-title">¡¡GOOOOOL!!</div>
     <div class="goal-team" id="goalTeamName">EQUIPO</div>
   </div>
 
+
+  <!-- =====================================================
+       ENCABEZADO
+       ===================================================== -->
+
   <div class="top-bar">
-    <div class="category-badge" id="categoryName">CATEGORIA 2014</div>
-    <div class="center-badge">VILLA SOLDATI</div>
-    <div class="header-badge">Partido en Vivo</div>
+
+    <div
+      class="category-badge"
+      id="categoryName"
+    >
+      CATEGORIA 2014
+    </div>
+
+    <div class="center-badge">
+      VILLA SOLDATI
+    </div>
+
+    <div class="header-badge">
+      Partido en Vivo
+    </div>
+
   </div>
 
+
+  <!-- =====================================================
+       MARCADOR
+       ===================================================== -->
+
   <div class="main-container">
+
     <div class="scoreboard">
-      <!-- Local -->
+
+      <!-- LOCAL -->
+
       <div class="team-card">
-        <div class="shield-box" id="homeShieldContainer" style="display: none;">
-          <img id="homeBadge" src="" alt="">
+
+        <div
+          class="shield-box"
+          id="homeShieldContainer"
+          style="display: none;"
+        >
+          <img
+            id="homeBadge"
+            src=""
+            alt=""
+          >
         </div>
-        <div class="team-name" id="homeName">LOCAL</div>
-        <div class="score" id="homeScore">0</div>
+
+        <div
+          class="team-name"
+          id="homeName"
+        >
+          LOCAL
+        </div>
+
+        <div
+          class="score"
+          id="homeScore"
+        >
+          0
+        </div>
+
       </div>
+
 
       <div class="vs-divider"></div>
 
-      <!-- Visitante -->
-      <div class="team-card" style="grid-template-columns: auto 1fr auto; direction: rtl;">
-        <div class="shield-box" id="awayShieldContainer" style="direction: ltr; display: none;">
-          <img id="awayBadge" src="" alt="">
+
+      <!-- VISITANTE -->
+
+      <div
+        class="team-card"
+        style="grid-template-columns: auto 1fr auto; direction: rtl;"
+      >
+
+        <div
+          class="shield-box"
+          id="awayShieldContainer"
+          style="direction: ltr; display: none;"
+        >
+          <img
+            id="awayBadge"
+            src=""
+            alt=""
+          >
         </div>
-        <div class="team-name" id="awayName" style="direction: ltr; text-align: right;">VISITANTE</div>
-        <div class="score" id="awayScore" style="direction: ltr;">0</div>
+
+        <div
+          class="team-name"
+          id="awayName"
+          style="direction: ltr; text-align: right;"
+        >
+          VISITANTE
+        </div>
+
+        <div
+          class="score"
+          id="awayScore"
+          style="direction: ltr;"
+        >
+          0
+        </div>
+
       </div>
+
     </div>
+
   </div>
+
+
+  <!-- =====================================================
+       RELOJ
+       ===================================================== -->
 
   <div class="timer-card">
-    <div class="period-tag" id="period">1T</div>
-    <div class="timer-text" id="clock">00:00</div>
+
+    <div
+      class="period-tag"
+      id="period"
+    >
+      1T
+    </div>
+
+    <div
+      class="timer-text"
+      id="clock"
+    >
+      00:00
+    </div>
+
   </div>
 
+
+  <!-- =====================================================
+       JAVASCRIPT
+       ===================================================== -->
+
   <script>
+
     const socket = io();
+
     let goalTimeout = null;
 
+    /*
+     * Guardamos el marcador anterior.
+     *
+     * IMPORTANTE:
+     * Arranca en null para que al cargar/refrescar la TV
+     * NO se dispare una animación de gol.
+     */
+    let previousHomeScore = null;
+    let previousAwayScore = null;
+
+
     function formatTime(totalSeconds) {
-      const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
-      const s = (totalSeconds % 60).toString().padStart(2, '0');
+
+      const m = Math.floor(totalSeconds / 60)
+        .toString()
+        .padStart(2, '0');
+
+      const s = (totalSeconds % 60)
+        .toString()
+        .padStart(2, '0');
+
       return `${m}:${s}`;
     }
 
+
+    /*
+     * Mostrar la animación de GOL
+     */
+    function showGoal(teamName) {
+
+      const overlay =
+        document.getElementById('goalOverlay');
+
+      const teamText =
+        document.getElementById('goalTeamName');
+
+
+      if (!overlay || !teamText) {
+        return;
+      }
+
+
+      /*
+       * Mostramos el equipo que convirtió
+       */
+      teamText.innerText =
+        teamName || '¡GOL!';
+
+
+      /*
+       * Activamos la animación
+       */
+      overlay.classList.add('active');
+
+
+      /*
+       * Si había otra animación pendiente,
+       * la cancelamos.
+       */
+      if (goalTimeout) {
+        clearTimeout(goalTimeout);
+      }
+
+
+      /*
+       * Después de 5 segundos volvemos
+       * automáticamente al tablero.
+       */
+      goalTimeout = setTimeout(() => {
+
+        overlay.classList.remove('active');
+
+      }, 5000);
+
+    }
+
+
+    /*
+     * RECIBIMOS EL ESTADO DEL MARCADOR
+     */
     socket.on('updateState', (state) => {
-      document.getElementById('homeName').innerText = state.homeName || 'LOCAL';
-      document.getElementById('awayName').innerText = state.awayName || 'VISITANTE';
-      document.getElementById('homeScore').innerText = state.homeScore;
-      document.getElementById('awayScore').innerText = state.awayScore;
-      document.getElementById('clock').innerText = formatTime(state.seconds);
-      document.getElementById('period').innerText = state.period;
-      
-      const catElem = document.getElementById('categoryName');
+
+
+      /* =================================================
+         ACTUALIZAR NOMBRES
+         ================================================= */
+
+      document.getElementById('homeName').innerText =
+        state.homeName || 'LOCAL';
+
+      document.getElementById('awayName').innerText =
+        state.awayName || 'VISITANTE';
+
+
+      /* =================================================
+         ACTUALIZAR MARCADORES
+         ================================================= */
+
+      document.getElementById('homeScore').innerText =
+        state.homeScore;
+
+      document.getElementById('awayScore').innerText =
+        state.awayScore;
+
+
+      /* =================================================
+         ACTUALIZAR RELOJ
+         ================================================= */
+
+      document.getElementById('clock').innerText =
+        formatTime(state.seconds);
+
+      document.getElementById('period').innerText =
+        state.period;
+
+
+      /* =================================================
+         CATEGORÍA
+         ================================================= */
+
+      const catElem =
+        document.getElementById('categoryName');
+
       if (state.category) {
+
         catElem.innerText = state.category;
         catElem.style.visibility = 'visible';
+
       } else {
+
         catElem.style.visibility = 'hidden';
+
       }
 
-      const homeBadge = document.getElementById('homeBadge');
-      const homeBox = document.getElementById('homeShieldContainer');
-      if (state.homeLogo && state.homeLogo.trim() !== '') {
+
+      /* =================================================
+         ESCUDO LOCAL
+         ================================================= */
+
+      const homeBadge =
+        document.getElementById('homeBadge');
+
+      const homeBox =
+        document.getElementById('homeShieldContainer');
+
+
+      if (
+        state.homeLogo &&
+        state.homeLogo.trim() !== ''
+      ) {
+
         homeBadge.src = state.homeLogo;
         homeBox.style.display = 'flex';
+
       } else {
+
         homeBox.style.display = 'none';
+
       }
 
-      const awayBadge = document.getElementById('awayBadge');
-      const awayBox = document.getElementById('awayShieldContainer');
-      if (state.awayLogo && state.awayLogo.trim() !== '') {
+
+      /* =================================================
+         ESCUDO VISITANTE
+         ================================================= */
+
+      const awayBadge =
+        document.getElementById('awayBadge');
+
+      const awayBox =
+        document.getElementById('awayShieldContainer');
+
+
+      if (
+        state.awayLogo &&
+        state.awayLogo.trim() !== ''
+      ) {
+
         awayBadge.src = state.awayLogo;
         awayBox.style.display = 'flex';
+
       } else {
+
         awayBox.style.display = 'none';
+
       }
 
-      if (state.bgUrl && state.bgUrl.trim() !== '') {
-        document.body.style.backgroundImage = `url('${state.bgUrl}')`;
+
+      /* =================================================
+         FONDO
+         ================================================= */
+
+      if (
+        state.bgUrl &&
+        state.bgUrl.trim() !== ''
+      ) {
+
+        document.body.style.backgroundImage =
+          `url('${state.bgUrl}')`;
+
       } else {
-        document.body.style.backgroundImage = 'none';
+
+        document.body.style.backgroundImage =
+          'none';
+
       }
+
+
+      /* =================================================
+         DETECCIÓN AUTOMÁTICA DE GOL
+         =================================================
+
+         Comparamos el marcador anterior con el nuevo.
+
+         Ejemplo:
+
+         anterior:
+         LOCAL 2
+         VISITANTE 1
+
+         nuevo:
+         LOCAL 3
+         VISITANTE 1
+
+         => GOL LOCAL
+      */
+
+
+      const currentHomeScore =
+        Number(state.homeScore);
+
+      const currentAwayScore =
+        Number(state.awayScore);
+
+
+      /*
+       * Solo hacemos la comparación después
+       * de haber recibido el primer estado.
+       *
+       * Esto evita que al abrir/refrescar la TV
+       * aparezca un GOOOOL si el partido ya va 4-2.
+       */
+
+      if (
+        previousHomeScore !== null &&
+        previousAwayScore !== null
+      ) {
+
+
+        /* ================================
+           GOL LOCAL
+           ================================= */
+
+        if (currentHomeScore > previousHomeScore) {
+
+          showGoal(
+            state.homeName || 'LOCAL'
+          );
+
+        }
+
+
+        /* ================================
+           GOL VISITANTE
+           ================================= */
+
+        else if (
+          currentAwayScore > previousAwayScore
+        ) {
+
+          showGoal(
+            state.awayName || 'VISITANTE'
+          );
+
+        }
+
+      }
+
+
+      /*
+       * Guardamos el marcador actual
+       * para la próxima actualización.
+       */
+
+      previousHomeScore = currentHomeScore;
+      previousAwayScore = currentAwayScore;
+
     });
 
-    // ESCUCHA DIRECTA DEL EVENTO DE GOL
+
+    /*
+     * =====================================================
+     * EVENTO DE GOL MANUAL
+     * =====================================================
+     *
+     * Dejamos también esta función porque tu sistema
+     * ya utiliza "triggerGoal".
+     *
+     * Así, si en algún momento el controlador manda
+     * este evento directamente, también funcionará.
+     */
+
     socket.on('triggerGoal', (data) => {
-      const overlay = document.getElementById('goalOverlay');
-      const teamText = document.getElementById('goalTeamName');
 
-      if (overlay && teamText) {
-        teamText.innerText = data.teamName || '¡GOL!';
-        overlay.classList.add('active');
+      showGoal(
+        data.teamName || '¡GOL!'
+      );
 
-        if (goalTimeout) clearTimeout(goalTimeout);
-
-        goalTimeout = setTimeout(() => {
-          overlay.classList.remove('active');
-        }, 5000);
-      }
     });
+
   </script>
+
 </body>
 </html>
+```
