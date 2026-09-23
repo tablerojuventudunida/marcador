@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tablero TV Profesional</title>
-  <!-- CARGA FORZADA DE MONTSERRAT (IGUAL A TU FOTO 2) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
@@ -14,7 +13,8 @@
       box-sizing: border-box; 
       margin: 0; 
       padding: 0; 
-      font-family: 'Montserrat', sans-serif !important; /* FORZA MONTSERRAT EN TODO EL DOCUMENTO */
+      font-family: 'Montserrat', sans-serif !important;
+      -webkit-text-stroke: 0px transparent !important; /* ELIMINA EL BORDE QUE CREA LOS CORTES MILITARES */
     }
 
     body {
@@ -142,7 +142,6 @@
       border-radius: 50%;
     }
 
-    /* ESTILO EQUIPO IGUAL A FOTO 2 */
     .team-name {
       font-size: 3vw;
       font-weight: 900;
