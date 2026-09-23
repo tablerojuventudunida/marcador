@@ -4,13 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tablero TV Profesional</title>
-  <!-- FUENTE EXACTA DE TU FOTO 2 (MONTSERRAT EXTRA BOLD) -->
+  <!-- CARGA FORZADA DE MONTSERRAT (IGUAL A TU FOTO 2) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
   <script src="/socket.io/socket.io.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: 'Montserrat', sans-serif !important; /* FORZA MONTSERRAT EN TODO EL DOCUMENTO */
+    }
 
     body {
       background-color: #060913;
@@ -18,7 +23,6 @@
       background-position: center;
       background-repeat: no-repeat;
       color: #ffffff;
-      font-family: 'Montserrat', 'Arial Black', sans-serif;
       height: 100vh;
       display: flex;
       flex-direction: column;
@@ -138,7 +142,7 @@
       border-radius: 50%;
     }
 
-    /* TIPOGRAFÍA IGUAL A TU FOTO 2 */
+    /* ESTILO EQUIPO IGUAL A FOTO 2 */
     .team-name {
       font-size: 3vw;
       font-weight: 900;
