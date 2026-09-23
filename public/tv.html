@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tablero TV Profesional</title>
+  <!-- IMPORTACIÓN PARA ASEGURAR QUE IMPACT/ANTON SE VEA IGUAL EN CUALQUIER TV -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
   <script src="/socket.io/socket.io.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,7 +18,7 @@
       background-position: center;
       background-repeat: no-repeat;
       color: #ffffff;
-      font-family: 'Impact', 'Trebuchet MS', 'Arial Black', sans-serif;
+      font-family: 'Anton', 'Impact', 'Trebuchet MS', 'Arial Black', sans-serif;
       height: 100vh;
       display: flex;
       flex-direction: column;
@@ -134,7 +138,7 @@
       border-radius: 50%;
     }
 
-    /* NOMBRE DE EQUIPO CON TIPOGRAFÍA ULTRAGRUESA ORIGINAL */
+    /* NOMBRE DE EQUIPO ORIGINAL */
     .team-name {
       font-size: 3.8vw;
       font-weight: 900;
@@ -148,7 +152,7 @@
       -webkit-text-stroke: 1px #000;
     }
 
-    /* NÚMEROS DEL MARCADOR HIPER VISIBLES ORIGINALES */
+    /* MARCADOR ORIGINAL */
     .score {
       font-size: 13vw;
       font-weight: 900;
@@ -192,7 +196,7 @@
     .timer-text {
       font-size: 5vw;
       font-weight: 900;
-      font-family: 'Impact', monospace;
+      font-family: 'Anton', 'Impact', monospace;
       color: #ffffff;
       letter-spacing: 3px;
       text-shadow: 3px 3px 5px rgba(0,0,0,0.8);
@@ -299,8 +303,6 @@
   <script>
     const socket = io();
     let goalTimeout = null;
-    let prevHomeScore = null;
-    let prevAwayScore = null;
 
     function formatTime(totalSeconds) {
       const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
@@ -308,34 +310,7 @@
       return `${m}:${s}`;
     }
 
-    function triggerGoalAnimation(teamName) {
-      const overlay = document.getElementById('goalOverlay');
-      const teamText = document.getElementById('goalTeamName');
-
-      if (overlay && teamText) {
-        teamText.innerText = teamName || '¡GOL!';
-        overlay.classList.add('active');
-
-        if (goalTimeout) clearTimeout(goalTimeout);
-
-        goalTimeout = setTimeout(() => {
-          overlay.classList.remove('active');
-        }, 3000);
-      }
-    }
-
     socket.on('updateState', (state) => {
-      // Detección de gol por incremento de puntaje
-      if (prevHomeScore !== null && state.homeScore > prevHomeScore) {
-        triggerGoalAnimation(state.homeName || 'LOCAL');
-      }
-      if (prevAwayScore !== null && state.awayScore > prevAwayScore) {
-        triggerGoalAnimation(state.awayName || 'VISITANTE');
-      }
-
-      prevHomeScore = state.homeScore;
-      prevAwayScore = state.awayScore;
-
       document.getElementById('homeName').innerText = state.homeName || 'LOCAL';
       document.getElementById('awayName').innerText = state.awayName || 'VISITANTE';
       document.getElementById('homeScore').innerText = state.homeScore;
@@ -378,7 +353,19 @@
 
     // ESCUCHA DIRECTA DEL EVENTO DE GOL
     socket.on('triggerGoal', (data) => {
-      triggerGoalAnimation(data.teamName);
+      const overlay = document.getElementById('goalOverlay');
+      const teamText = document.getElementById('goalTeamName');
+
+      if (overlay && teamText) {
+        teamText.innerText = data.teamName || '¡GOL!';
+        overlay.classList.add('active');
+
+        if (goalTimeout) clearTimeout(goalTimeout);
+
+        goalTimeout = setTimeout(() => {
+          overlay.classList.remove('active');
+        }, 5000);
+      }
     });
   </script>
 </body>
