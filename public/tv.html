@@ -4,10 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tablero TV Profesional</title>
-  <!-- FUENTE EXACTA DE TU DISEÑO ORIGINAL -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Teko:wght@600;700&display=swap" rel="stylesheet">
   <script src="/socket.io/socket.io.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -18,7 +14,7 @@
       background-position: center;
       background-repeat: no-repeat;
       color: #ffffff;
-      font-family: 'Teko', sans-serif;
+      font-family: 'Impact', 'Trebuchet MS', 'Arial Black', sans-serif;
       height: 100vh;
       display: flex;
       flex-direction: column;
@@ -138,6 +134,7 @@
       border-radius: 50%;
     }
 
+    /* NOMBRE DE EQUIPO CON TIPOGRAFÍA ULTRAGRUESA ORIGINAL */
     .team-name {
       font-size: 3.8vw;
       font-weight: 900;
@@ -151,6 +148,7 @@
       -webkit-text-stroke: 1px #000;
     }
 
+    /* NÚMEROS DEL MARCADOR HIPER VISIBLES ORIGINALES */
     .score {
       font-size: 13vw;
       font-weight: 900;
@@ -194,6 +192,7 @@
     .timer-text {
       font-size: 5vw;
       font-weight: 900;
+      font-family: 'Impact', monospace;
       color: #ffffff;
       letter-spacing: 3px;
       text-shadow: 3px 3px 5px rgba(0,0,0,0.8);
@@ -326,7 +325,7 @@
     }
 
     socket.on('updateState', (state) => {
-      // Dispara la animación si incrementan los goles
+      // Detección de gol por incremento de puntaje
       if (prevHomeScore !== null && state.homeScore > prevHomeScore) {
         triggerGoalAnimation(state.homeName || 'LOCAL');
       }
