@@ -20,7 +20,7 @@
       background-position: center;
       background-repeat: no-repeat;
       color: #ffffff;
-      font-family: 'Impact', 'Trebuchet MS', 'Arial Black', sans-serif;
+      font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
       height: 100vh;
       height: 100dvh;
       display: flex;
@@ -59,7 +59,7 @@
 
     .category-badge {
       font-size: clamp(42px, 5vw, 90px);
-      font-weight: 900;
+      font-weight: 800;
       color: #ffffff;
       background: rgba(15, 23, 42, 0.9);
       padding: 16px 48px;
@@ -156,15 +156,14 @@
 
     .score {
       font-size: clamp(110px, 17vw, 300px);
-      font-weight: 900;
+      font-weight: 800;
+      font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
       color: #38bdf8;
       font-variant-numeric: tabular-nums;
-      text-shadow:
-        0 0 35px rgba(56, 189, 248, 0.7),
-        4px 4px 0px #000;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
       line-height: 1;
       padding: 0 1vw;
-      -webkit-text-stroke: 2px #0284c7;
+      -webkit-text-stroke: 0.5px #0284c7;
       flex-shrink: 0;
     }
 
@@ -198,7 +197,7 @@
 
     .period-tag {
       font-size: clamp(36px, 4.5vw, 75px);
-      font-weight: 900;
+      font-weight: 800;
       color: #ffffff;
       background: #ef4444;
       padding: 8px 28px;
@@ -209,11 +208,11 @@
 
     .timer-text {
       font-size: clamp(72px, 8vw, 135px);
-      font-weight: 900;
-      font-family: 'Impact', monospace;
+      font-weight: 800;
+      font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
       color: #ffffff;
-      letter-spacing: 5px;
-      text-shadow: 3px 3px 5px rgba(0,0,0,0.8);
+      letter-spacing: 2px;
+      text-shadow: 0 2px 5px rgba(0,0,0,0.75);
       line-height: 1;
       white-space: nowrap;
     }
@@ -243,7 +242,7 @@
 
     .goal-title {
       font-size: 14vw;
-      font-weight: 900;
+      font-weight: 800;
       color: #f59e0b;
       text-shadow:
         0 0 60px rgba(245, 158, 11, 0.9),
@@ -252,7 +251,7 @@
       transform: scale(0.5);
       transition:
         transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      -webkit-text-stroke: 3px #78350f;
+      -webkit-text-stroke: 1px #78350f;
     }
 
     .goal-overlay.active .goal-title {
@@ -698,3 +697,4 @@
 
 </body>
 </html>
+
